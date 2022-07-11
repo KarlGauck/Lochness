@@ -1,0 +1,135 @@
+package me.karl.lochness.entities.watermonsters.orca;
+
+import me.karl.lochness.entities.Hitbox;
+import me.karl.lochness.entities.watermonsters.WaterMonster;
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.attribute.Attribute;
+import org.bukkit.entity.Dolphin;
+import org.bukkit.entity.EntityType;
+import org.bukkit.entity.Player;
+import org.bukkit.inventory.ItemStack;
+import org.bukkit.inventory.meta.ItemMeta;
+
+import java.util.UUID;
+
+public class LochnessOrca extends WaterMonster {
+
+    protected transient Dolphin dolphin;
+    protected UUID dolphinUUID;
+
+    private static boolean isAttacking = false;
+    private transient boolean isDrownedActive = true;
+
+    public LochnessOrca(LochnessOrca orca) {
+        super(orca);
+        dolphin = (Dolphin) Bukkit.getEntity(orca.dolphinUUID);
+        setDolphin();
+    }
+
+    public LochnessOrca(Location loc) {
+        super(loc);
+        dolphin = (Dolphin) loc.getWorld().spawnEntity(loc, EntityType.DOLPHIN);
+        setDolphin();
+    }
+
+    @Override
+    protected void movementLogic() {
+
+        Bukkit.broadcastMessage(drowned.getTarget().getName());
+        if((drowned.getTarget() instanceof Player) && isTargetValid((Player)drowned.getTarget(), drowned.getWorld())) {
+            if (isDrownedActive) {
+                if (drowned.getTarget().getLocation().distance(drowned.getLocation()) < 13)
+                    isDrownedActive = false;
+                drowned.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(0.2);
+            } else {
+                if (drowned.getTarget().getLocation().distance(drowned.getLocation()) > 15)
+                    isDrownedActive = true;
+            }
+        } else {
+            isDrownedActive = false;
+            Bukkit.broadcastMessage("test");
+        }
+
+        if(isDrownedActive) {
+            dolphin.setAI(false);
+            drowned.setAI(true);
+            dolphin.teleport(drowned.getLocation().setDirection(drowned.getVelocity()));
+        } else {
+            dolphin.setAI(true);
+            drowned.setAI(false);
+            drowned.teleport(dolphin.getLocation().setDirection(dolphin.getVelocity()));
+        }
+    }
+
+    @Override
+    protected void attackLogic() {
+        if(isAttacking)
+            super.attackLogic();
+    }
+
+    private void setDolphin() {
+        dolphin.setCollidable(false);
+        dolphin.setInvisible(true);
+        dolphin.setInvulnerable(true);
+        dolphin.setSilent(true);
+        dolphin.setRemoveWhenFarAway(false);
+        dolphin.addScoreboardTag(getName());
+        dolphinUUID = dolphin.getUniqueId();
+    }
+
+    public void remove() {
+        dolphin.remove();
+        dolphin.setHealth(0);
+        super.remove();
+    }
+
+    public int getSPECIAL_ATTACK_FEEDBACK() {
+        return  0;
+    }
+
+    public int getSPECIAL_ATTACK_DURATION() {
+        return 0;
+    }
+
+    public int getSPECIAL_ATTACK_COOLDOWN() {
+        return 0;
+    }
+
+    public int getSPECIAL_ATTACK_PROPABILITY() {
+        return 0;
+    }
+
+    public double getGENERIC_MOVEMENT_SPEED() {
+        return 0.4;
+    }
+
+    public double getGENERIC_ATTACK_DAMADGE() {
+        return 1;
+    }
+
+    public double getMAXIMUM_HEALTH() {
+        return 20;
+    }
+
+    public ItemStack getHeadStack() {
+        ItemStack stack = new ItemStack(Material.STICK);
+        ItemMeta meta = stack.getItemMeta();
+        meta.setCustomModelData(4);
+        stack.setItemMeta(meta);
+        return stack;
+    }
+
+    public ItemStack getDrop() {
+        return new ItemStack(Material.DIAMOND);
+    }
+
+    public String getName() {
+        return "orcaMonster";
+    }
+
+    public Hitbox getHitbox() {
+        return null;
+    }
+}

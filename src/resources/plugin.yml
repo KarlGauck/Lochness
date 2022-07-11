@@ -1,0 +1,16 @@
+name: Lochness
+version: ${project.version}
+main: me.karl.lochness.Lochness
+api-version: 1.19
+authors: [ Karl_390, Faincraft ]
+description: A new minecraft endboss, living deep down in the gloomy ocean, even under the deep dark
+
+commands:
+  music:
+    description: enable or disable music during endfight
+  debugLochness:
+    description: multiple debug options for the lochness plugin
+  guide:
+    description: you will get a Lochness-Guide
+
+load: startup
