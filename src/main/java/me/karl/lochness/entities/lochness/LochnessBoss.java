@@ -1,5 +1,6 @@
 package me.karl.lochness.entities.lochness;
 
+import javafx.util.Pair;
 import me.karl.lochness.Lochness;
 import me.karl.lochness.PluginUtils;
 import me.karl.lochness.commandexecutor.Debug;
@@ -245,6 +246,8 @@ public class LochnessBoss extends LochnessEntity implements Serializable {
 
                 if (!drowned.getLocation().getChunk().isLoaded())
                     return;
+                if (!drowned.getLocation().getChunk().isEntitiesLoaded())
+                    return;
 
                 timeLived++;
 
@@ -354,6 +357,15 @@ public class LochnessBoss extends LochnessEntity implements Serializable {
 
             }
         };
+    }
+
+    @Override
+    public void updateGlobalChunkPos() {
+        if (!drowned.getLocation().getChunk().isLoaded())
+            return;
+        chunkX = drowned.getLocation().getChunk().getX();
+        chunkZ = drowned.getLocation().getChunk().getZ();
+        world = Bukkit.getWorlds().indexOf(drowned.getWorld());
     }
 
     private void attackLogic() {

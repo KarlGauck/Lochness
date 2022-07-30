@@ -1,5 +1,6 @@
 package me.karl.lochness.entities.ceberos;
 
+import javafx.util.Pair;
 import me.karl.lochness.entities.LochnessEntity;
 import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
@@ -200,6 +201,15 @@ public class Cerberus extends LochnessEntity {
 
             }
         };
+    }
+
+    @Override
+    public void updateGlobalChunkPos() {
+        if (!wolf.getLocation().getChunk().isLoaded())
+            return;
+        chunkX = wolf.getLocation().getChunk().getX();
+        chunkZ = wolf.getLocation().getChunk().getZ();
+        world = Bukkit.getWorlds().indexOf(wolf.getWorld());
     }
 
     @Override

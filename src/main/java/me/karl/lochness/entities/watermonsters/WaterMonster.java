@@ -1,5 +1,6 @@
 package me.karl.lochness.entities.watermonsters;
 
+import javafx.util.Pair;
 import me.karl.lochness.Lochness;
 import me.karl.lochness.PluginUtils;
 import me.karl.lochness.commandexecutor.Debug;
@@ -51,7 +52,10 @@ public class WaterMonster extends LochnessEntity {
         initValues();
         health = waterMonster.health;
         drowned = (Drowned) Bukkit.getEntity(waterMonster.drownedUUID);
+
+        assert drowned != null;
         resetDrowned(drowned.getLocation());
+        Bukkit.broadcastMessage("testmessage: reset constructor watermonster");
         timeSinceLastSpecialAttack = waterMonster.timeSinceLastSpecialAttack;
         timeSinceLastHit = waterMonster.timeSinceLastHit;
     }
@@ -60,7 +64,8 @@ public class WaterMonster extends LochnessEntity {
         super(Bukkit.getWorlds().indexOf(loc.getWorld()), loc.getChunk().getX(), loc.getChunk().getZ());
         initValues();
         health = MAXIMUM_HEALTH;
-        resetDrowned(loc);
+        spawnDrowned(loc);
+        Bukkit.broadcastMessage("testmessage: reset constructor location");
     }
 
     public Runnable tick() {
@@ -68,12 +73,30 @@ public class WaterMonster extends LochnessEntity {
             @Override
             public void run() {
 
+                // Only calculate if player is near
+                Boolean nearbyPlayer = false;
+                for(Entity entity: drowned.getNearbyEntities(80.0, 80.0, 80.0)) {
+                    if (entity.getType() == EntityType.PLAYER)
+                        nearbyPlayer = true;
+                }
+                if (!nearbyPlayer)
+                    return;
+
+                // Only calculate if chunk is loaded
+                if (!drowned.getLocation().getChunk().isLoaded() || !drowned.getLocation().getChunk().isEntitiesLoaded())
+                    return;
+
+
+
                 timeLived++;
 
                 // ------ Kill old drowneds ------
                 for (Entity entity : drowned.getWorld().getEntities()) {
-                    if (entity.getScoreboardTags().contains("dead" + getName()))
+                    if (entity.getScoreboardTags().contains("dead")) {
                         entity.remove();
+                        if (entity instanceof LivingEntity)
+                            ((LivingEntity) entity).setHealth(0.0);
+                    }
                 }
 
                 // ------ if dead ------
@@ -92,12 +115,14 @@ public class WaterMonster extends LochnessEntity {
                 lastLoc = drowned.getLocation();
 
                 if(falseMovements > 40) {
-                    resetDrowned(drowned.getLocation());
+                    // Bukkit.broadcastMessage("testmessage: reset drowned falseMovement");
+                    // resetDrowned(drowned.getLocation());
                     falseMovements = 0;
                 }
 
                 // ------ Potion Effects and stuff ------
                 if (timeLived % 10000 == 0) {
+                    Bukkit.broadcastMessage("testmessage: reset drowned time lived");
                     resetDrowned(drowned.getLocation());
                 }
 
@@ -113,6 +138,15 @@ public class WaterMonster extends LochnessEntity {
 
             }
         };
+    }
+
+    @Override
+    public void updateGlobalChunkPos() {
+        if (!drowned.getLocation().getChunk().isLoaded())
+            return;
+        chunkX = drowned.getLocation().getChunk().getX();
+        chunkZ = drowned.getLocation().getChunk().getZ();
+        world = Bukkit.getWorlds().indexOf(drowned.getWorld());
     }
 
     protected void movementLogic() {
@@ -163,13 +197,7 @@ public class WaterMonster extends LochnessEntity {
             health = MAXIMUM_HEALTH;
     }
 
-    private void resetDrowned(Location loc) {
-        if(drowned != null) {
-            drowned.addScoreboardTag("dead" + getName());
-            drowned.setLootTable(LootTables.SILVERFISH.getLootTable());
-            drowned.remove();
-            drowned.setHealth(0);
-        }
+    private void spawnDrowned(Location loc) {
         drowned = (Drowned) loc.getWorld().spawnEntity(loc, EntityType.DROWNED);
         drowned.setInvisible(true);
         drowned.getEquipment().setHelmet(headStack);
@@ -178,6 +206,7 @@ public class WaterMonster extends LochnessEntity {
         drowned.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 999999, 255, false, false));
         drowned.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, 999999, 255, false, false));
         drowned.setRemoveWhenFarAway(false);
+        drowned.setPersistent(true);
         drowned.leaveVehicle();
         drowned.setBaby();
         drowned.setSilent(true);
@@ -190,7 +219,17 @@ public class WaterMonster extends LochnessEntity {
         drowned.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(GENERIC_MOVEMENT_SPEED);
         drowned.getAttribute(Attribute.GENERIC_ATTACK_DAMAGE).setBaseValue(GENERIC_ATTACK_DAMADGE);
         drowned.addScoreboardTag("waterMonster");
+    }
 
+    private void resetDrowned(Location loc) {
+        if(drowned != null) {
+            drowned.addScoreboardTag("dead" + getName());
+            drowned.setLootTable(LootTables.SILVERFISH.getLootTable());
+            drowned.remove();
+            drowned.setHealth(0);
+        }
+        Bukkit.broadcastMessage("drowned was reset");
+        spawnDrowned(loc);
     }
 
     public void calculateProjectiles() {
@@ -218,7 +257,7 @@ public class WaterMonster extends LochnessEntity {
     }
 
     protected void checkIfDead() {
-        if (drowned.isDead()) {
+        if (drowned.getHealth() <= 0.0) {
             remove();
         }
     }
@@ -236,6 +275,7 @@ public class WaterMonster extends LochnessEntity {
 
     @Override
     protected void save() {
+        Bukkit.broadcastMessage("save");
         world = Bukkit.getWorlds().indexOf(drowned.getWorld());
         chunkX = drowned.getLocation().getChunk().getX();
         chunkZ = drowned.getLocation().getChunk().getZ();

@@ -14,16 +14,19 @@ public class BlockPlaceEvent implements Listener {
         Block block = event.getBlock();
         Location loc = block.getLocation();
 
-        if(p.getGameMode().equals(GameMode.CREATIVE))
+        if (p.getGameMode().equals(GameMode.CREATIVE))
             return;
 
-        if(!loc.getWorld().getEnvironment().equals(World.Environment.THE_END))
+        if (!loc.getWorld().getEnvironment().equals(World.Environment.THE_END))
             return;
 
-        if(loc.getBlockX() < 544 || loc.getBlockX() > 544 + (48 * 3))
+        if (loc.getBlockX() < 544 || loc.getBlockX() > 544 + (48 * 3))
             return;
 
-        if(loc.getBlockZ() < 144 || loc.getBlockZ() > 144 + (48 * 3))
+        if (loc.getBlockZ() < 144 || loc.getBlockZ() > 144 + (48 * 3))
+            return;
+
+        if (block.getType() == Material.SHULKER_BOX)
             return;
 
         event.setCancelled(true);

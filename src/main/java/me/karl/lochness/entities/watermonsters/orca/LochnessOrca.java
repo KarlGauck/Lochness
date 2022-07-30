@@ -16,7 +16,7 @@ import org.bukkit.util.Vector;
 import java.util.Random;
 import java.util.UUID;
 
-public class LochnessOrca extends WaterMonster {
+public class        LochnessOrca extends WaterMonster {
 
     protected transient Dolphin dolphin;
     protected UUID dolphinUUID;

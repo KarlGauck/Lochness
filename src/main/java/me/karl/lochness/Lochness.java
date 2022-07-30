@@ -6,6 +6,7 @@ import me.karl.lochness.commandexecutor.GuideCommand;
 import me.karl.lochness.commandexecutor.MusicCommand;
 import me.karl.lochness.enchantments.poseidonspower.CustomEnchants;
 import me.karl.lochness.enchantments.poseidonspower.InventoryClickEvent;
+import me.karl.lochness.entities.EntityLoadEvent;
 import me.karl.lochness.entities.LochnessEntity;
 import me.karl.lochness.entities.LochnessEntityHitEvent;
 import me.karl.lochness.entities.ceberos.CeberosTriggerEvent;
@@ -44,7 +45,7 @@ public final class Lochness extends JavaPlugin {
     public static int ticksBeforeStartup = 0;
 
     public static final String DATAPACK_DOWNLOAD_LINK = "https://www.dropbox.com/s/hhq86uzu8dajmml/lochness.zip?dl=1";
-    public static final String RESOURCEPACK_DOWNLOAD_LINK = "https://www.dropbox.com/s/ignlsr4j7otpe65/LochnessResources.zip?dl=1";
+    public static final String RESOURCEPACK_DOWNLOAD_LINK = "https://www.dropbox.com/s/9no8t4wbli3bdm8/LochnessResources.zip?dl=1";
 
     public static boolean isDatapackInstalled = false;
 
@@ -125,6 +126,9 @@ public final class Lochness extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(new InteractionEvent(), this);
         Bukkit.getPluginManager().registerEvents(new CeberosTriggerEvent(), this);
         Bukkit.getPluginManager().registerEvents(new LochnessEntityHitEvent(), this);
+        Bukkit.getPluginManager().registerEvents(new EntityDeathEvent(), this);
+        Bukkit.getPluginManager().registerEvents(new BrutePortalEvent(), this);
+        Bukkit.getPluginManager().registerEvents(new EntityLoadEvent(), this);
 
         //Structure events
         Bukkit.getPluginManager().registerEvents(new HangingBreak(), this);
@@ -136,6 +140,7 @@ public final class Lochness extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(new ItemFrameEvent(), this);
         Bukkit.getPluginManager().registerEvents(new PortalOpenEvent(), this);
         Bukkit.getPluginManager().registerEvents(new MoveEvent(), this);
+        Bukkit.getPluginManager().registerEvents(new IslandBlockEvent(), this);
 
         //General Events
         Bukkit.getPluginManager().registerEvents(new DeathEvent(), this);

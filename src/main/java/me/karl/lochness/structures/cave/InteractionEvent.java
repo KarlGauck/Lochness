@@ -38,7 +38,7 @@ public class InteractionEvent implements Listener {
 
         Entity entity = event.getRightClicked();
 
-        if(entity.getScoreboardTags().contains("lochnessBell")) {
+        if(entity.getScoreboardTags().contains("lochnessBell") && !interacted) {
             source = entity.getLocation().clone();
 
             particles.add(entity.getLocation().clone());

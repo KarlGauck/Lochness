@@ -155,7 +155,6 @@ public class CaveLogic {
                 }
             }
             resetEntities();
-            spawnEntities();
             BlockBreakEvent.initValues();
             LochnessBoss.resetEffectValues();
             InteractionEvent.interacted = false;
@@ -163,6 +162,7 @@ public class CaveLogic {
     }
 
     public static void spawnEntities() {
+        Bukkit.broadcastMessage("test message: spawn Entities()");
         // --- Spawn LochnessBoss ---
         new LochnessBoss(lochnessSpawnLocation);
 

@@ -49,7 +49,6 @@ public class LochnessOrca extends WaterMonster {
             }
         } else {
             isDrownedActive = false;
-            Bukkit.broadcastMessage("test");
         }
 
         if(isDrownedActive) {

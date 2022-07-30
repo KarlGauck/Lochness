@@ -4,6 +4,7 @@ import me.karl.lochness.Lochness;
 import me.karl.lochness.PluginUtils;
 import me.karl.lochness.enchantments.poseidonspower.CustomEnchants;
 import me.karl.lochness.structures.StructureLoader;
+import me.karl.lochness.structures.cave.CaveLogic;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
@@ -124,6 +125,7 @@ public class PortalOpenEvent implements Listener {
                 + (cmdL.getBlockX() + 6) + " " + cmdL.getBlockY() + " " + (cmdL.getBlockZ() + 6) + " air replace bedrock");
 
         Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "advancement grant @a only minecraft:story/enter_the_end");
+        CaveLogic.spawnEntities();
 
     }
 

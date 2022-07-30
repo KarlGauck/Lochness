@@ -1,5 +1,6 @@
 package me.karl.lochness.entities;
 
+import javafx.util.Pair;
 import me.karl.lochness.Lochness;
 import me.karl.lochness.entities.ceberos.Cerberus;
 import me.karl.lochness.entities.lochness.LochnessBoss;
@@ -14,15 +15,17 @@ import me.karl.lochness.entities.watermonsters.rochen.LochnessRochen;
 import me.karl.lochness.entities.watermonsters.turtle.LochnessTurtle;
 import me.karl.lochness.structures.cave.CaveLogic;
 import org.bukkit.Bukkit;
+import org.bukkit.Chunk;
 import org.bukkit.World;
 import org.bukkit.entity.Player;
 
 import java.io.*;
-import java.util.ArrayList;
+import java.util.*;
 
-public class LochnessEntity implements Serializable{
+public abstract class LochnessEntity implements Serializable{
 
     private static ArrayList<LochnessEntity> entities = new ArrayList<>();
+    private static HashMap<String, LochnessEntity> unloadedEntities = new HashMap<>();
 
     protected int chunkX, chunkZ;
     protected int world;
@@ -39,13 +42,12 @@ public class LochnessEntity implements Serializable{
     }
 
     public Runnable tick() {
-        return new Runnable() {
-            @Override
-            public void run() {
+        return () -> {
 
-            }
         };
     }
+
+    abstract public void updateGlobalChunkPos();
 
     public void remove() {
         stop();
@@ -76,11 +78,14 @@ public class LochnessEntity implements Serializable{
         if(!entityPath.exists())
             entityPath.mkdir();
 
-        ObjectOutputStream objectOutputStream = null;
+        ObjectOutputStream objectOutputStream;
 
         try {
 
-            for(LochnessEntity entity: entities) {
+            ArrayList<LochnessEntity> allEntities = entities;
+            allEntities.addAll(unloadedEntities.values());
+
+            for(LochnessEntity entity: allEntities) {
 
                 entity.save();
 
@@ -113,6 +118,7 @@ public class LochnessEntity implements Serializable{
                         + entities.indexOf(entity) + ".txt");
                 objectOutputStream = new ObjectOutputStream(fileOutputStream);
                 objectOutputStream.writeObject(entity);
+                Bukkit.broadcastMessage("wrote entity");
                 fileOutputStream.close();
                 objectOutputStream.close();
             }
@@ -127,38 +133,23 @@ public class LochnessEntity implements Serializable{
         if(!entityPath.exists())
             return;
 
-        ObjectInputStream objectInputStream = null;
+        ObjectInputStream objectInputStream;
 
         try {
 
             for(File file: entityPath.listFiles()) {
+                Bukkit.broadcastMessage(file.getName() + "filenamehahhe");
                 FileInputStream fileInputStream = new FileInputStream("./" + Bukkit.getWorlds().get(0).getName() + "/LochnessEntities/" + file.getName());
                 objectInputStream = new ObjectInputStream(fileInputStream);
 
-                // ------ instanciate entity based on name, given when saved ------
-                if(file.getName().contains("LochnessBoss"))
-                    new LochnessBoss((LochnessBoss) objectInputStream.readObject());
-                else if(file.getName().contains("Cerberus"))
-                    new Cerberus((Cerberus) objectInputStream.readObject());
-                else if(file.getName().contains("Turtel"))
-                    new LochnessTurtle((LochnessTurtle) objectInputStream.readObject());
-                else if(file.getName().contains("Rochen"))
-                    new LochnessRochen((LochnessRochen) objectInputStream.readObject());
-                else if(file.getName().contains("Piranha"))
-                    new LochnessPiranha((LochnessPiranha) objectInputStream.readObject());
-                else if(file.getName().contains("Orca"))
-                    new LochnessOrca((LochnessOrca) objectInputStream.readObject());
-                else if(file.getName().contains("Narwal"))
-                    new LochnessNarwal((LochnessNarwal) objectInputStream.readObject());
-                else if(file.getName().contains("Krake"))
-                    new LochnessKraken((LochnessKraken) objectInputStream.readObject());
-                else if(file.getName().contains("Krabbe"))
-                    new LochnessKrabbe((LochnessKrabbe) objectInputStream.readObject());
-                else if(file.getName().contains("Hammerhai"))
-                    new LochnessHammerhai((LochnessHammerhai) objectInputStream.readObject());
-                else if(file.getName().contains("Hai"))
-                    new LochnessHai((LochnessHai) objectInputStream.readObject());
-
+                LochnessEntity entity = (LochnessEntity) objectInputStream.readObject();
+                Chunk chunk = Bukkit.getWorlds().get(entity.world).getChunkAt(entity.chunkX, entity.chunkZ);
+                if (chunk.isLoaded() && chunk.isEntitiesLoaded()) {
+                    // ------ instanciate entity based on name, given when saved ------
+                    loadEntity(entity, file.getName());
+                } else {
+                    unloadedEntities.put(file.getName(), entity);
+                }
 
                 file.delete();
                 fileInputStream.close();
@@ -167,6 +158,47 @@ public class LochnessEntity implements Serializable{
 
         } catch (IOException | ClassNotFoundException e) {
             e.printStackTrace();
+        }
+    }
+
+    public static void loadEntity(LochnessEntity entity, String filename) {
+        Bukkit.broadcastMessage(filename);
+        // ------ instanciate entity based on name, given when saved ------
+        if(filename.contains("LochnessBoss"))
+            new LochnessBoss((LochnessBoss) entity);
+        else if(filename.contains("Cerberus"))
+            new Cerberus((Cerberus) entity);
+        else if(filename.contains("Turtel"))
+            new LochnessTurtle((LochnessTurtle) entity);
+        else if(filename.contains("Rochen"))
+            new LochnessRochen((LochnessRochen) entity);
+        else if(filename.contains("Piranha"))
+            new LochnessPiranha((LochnessPiranha) entity);
+        else if(filename.contains("Orca"))
+            new LochnessOrca((LochnessOrca) entity);
+        else if(filename.contains("Narwal"))
+            new LochnessNarwal((LochnessNarwal) entity);
+        else if(filename.contains("Krake"))
+            new LochnessKraken((LochnessKraken) entity);
+        else if(filename.contains("Krabbe"))
+            new LochnessKrabbe((LochnessKrabbe) entity);
+        else if(filename.contains("Hammerhai"))
+            new LochnessHammerhai((LochnessHammerhai) entity);
+        else if(filename.contains("Hai"))
+            new LochnessHai((LochnessHai) entity);
+    }
+
+    public static void tryLoadUnloadedEntities() {
+        Iterator i = unloadedEntities.entrySet().iterator();
+        while (i.hasNext()) {
+            Map.Entry<String, LochnessEntity> entryPair = (Map.Entry<String, LochnessEntity>)i.next();
+            String filename = entryPair.getKey();
+            LochnessEntity entity = entryPair.getValue();
+            Chunk chunk = Bukkit.getWorlds().get(entity.world).getChunkAt(entity.chunkX, entity.chunkZ);
+            if (chunk.isLoaded() && chunk.isEntitiesLoaded()) {
+                loadEntity(entity, filename);
+                i.remove();
+            }
         }
     }
 
