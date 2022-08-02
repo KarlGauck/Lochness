@@ -16,6 +16,7 @@ import me.karl.lochness.structures.StructureLoader;
 import me.karl.lochness.structures.cage.CageLoadEvent;
 import me.karl.lochness.structures.cave.*;
 import me.karl.lochness.structures.endcredits.StopSpectating;
+import me.karl.lochness.structures.hadesroom.ChestBreakEvent;
 import me.karl.lochness.structures.hadesroom.ItemFrameEvent;
 import me.karl.lochness.structures.hadesroom.RoomLoadEvent;
 import me.karl.lochness.structures.islands.IslandLoadEvent;
@@ -141,6 +142,7 @@ public final class Lochness extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(new PortalOpenEvent(), this);
         Bukkit.getPluginManager().registerEvents(new MoveEvent(), this);
         Bukkit.getPluginManager().registerEvents(new IslandBlockEvent(), this);
+        Bukkit.getPluginManager().registerEvents(new ChestBreakEvent(), this);
 
         //General Events
         Bukkit.getPluginManager().registerEvents(new DeathEvent(), this);
@@ -270,17 +272,14 @@ public final class Lochness extends JavaPlugin {
     }
 
     public static Runnable getLoop() {
-        return new Runnable() {
-            @Override
-            public void run() {
-                TIME_RUNNING ++;
+        return () -> {
+            TIME_RUNNING ++;
 
-                // --- --- Poseidons Cave Particle --- ---
-                getIslandLoc().getWorld().spawnParticle(Particle.CLOUD, getIslandLoc().add(new Vector(16.5, 40, 24)), 100, 1.2, 1, 0, 0.02);
-                CaveLogic.particleLoop();
-                InteractionEvent.particleLoop();
-                SoundClass.soundLoop();
-            }
+            // --- --- Poseidons Cave Particle --- ---
+            getIslandLoc().getWorld().spawnParticle(Particle.CLOUD, getIslandLoc().add(new Vector(16.5, 40, 24)), 100, 1.2, 1, 0, 0.02);
+            CaveLogic.particleLoop();
+            InteractionEvent.particleLoop();
+            SoundClass.soundLoop();
         };
     }
 

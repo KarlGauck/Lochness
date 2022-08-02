@@ -67,6 +67,8 @@ public class WaterMonster extends LochnessEntity {
         return () -> {
 
             drowned = (Drowned) Bukkit.getEntity(drownedUUID);
+            if (drowned == null)
+                remove();
 
             // Only calculate if player is near
             Boolean nearbyPlayer = false;

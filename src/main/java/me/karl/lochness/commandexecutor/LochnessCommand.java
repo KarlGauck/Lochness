@@ -1,6 +1,7 @@
 package me.karl.lochness.commandexecutor;
 
 import me.karl.lochness.Lochness;
+import me.karl.lochness.PluginUtils;
 import me.karl.lochness.enchantments.poseidonspower.CustomEnchants;
 import me.karl.lochness.entities.LochnessEntity;
 import me.karl.lochness.entities.ceberos.Cerberus;
@@ -14,7 +15,9 @@ import me.karl.lochness.entities.watermonsters.orca.LochnessOrca;
 import me.karl.lochness.entities.watermonsters.piranha.LochnessPiranha;
 import me.karl.lochness.entities.watermonsters.rochen.LochnessRochen;
 import me.karl.lochness.entities.watermonsters.turtle.LochnessTurtle;
+import me.karl.lochness.structures.StructureLoader;
 import me.karl.lochness.structures.cave.CaveLogic;
+import me.karl.lochness.structures.cave.InteractionEvent;
 import me.karl.lochness.structures.islands.PortalOpenEvent;
 import net.md_5.bungee.api.chat.ClickEvent;
 import net.md_5.bungee.api.chat.HoverEvent;
@@ -28,6 +31,7 @@ import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.CompassMeta;
 import org.bukkit.inventory.meta.ItemMeta;
+import org.bukkit.util.Vector;
 import org.jetbrains.annotations.NotNull;
 import org.jetbrains.annotations.Nullable;
 
@@ -258,29 +262,68 @@ public class LochnessCommand implements TabExecutor {
 
                     default: sender.sendMessage(Lochness.getPrefix() + ChatColor.RED + "invalid arguments");
                 }
+                break;
+
+            case "openPortal":
+                switch (args[1]) {
+                    case "island":
+                        PortalOpenEvent.openPortal();
+                        break;
+                    case "lochnessCage":
+                        InteractionEvent.openCage();
+                        break;
+                    default: sender.sendMessage(Lochness.getPrefix() + ChatColor.RED + "invalid arguments");
+                }
+                break;
+
+            case "structure":
+                switch (args[1]) {
+                    case "generate":
+                        switch (args[2]) {
+                            case "island":
+                                StructureLoader.generateIslands();
+                                break;
+                            case "cave":
+                                StructureLoader.generateCave();
+                                break;
+                            case "hadesRoom":
+                                StructureLoader.generateStructure(Lochness.getRoomLoc(), "lochness","lochness:hades_room");
+                                break;
+                            default: sender.sendMessage(Lochness.getPrefix() + ChatColor.RED + "invalid arguments");
+                      }
+                }
+                break;
+
+            case "datapack":
+                switch (args[1]) {
+                    case "downloadlink":
+                        sender.sendMessage(Lochness.getPrefix() + "Datapack Downloadlink: " + ChatColor.YELLOW + Lochness.DATAPACK_DOWNLOAD_LINK);
+                        break;
+                    case "verify":
+                        Boolean isInstalled = PluginUtils.grantAdvancement(p, "lochness:root");
+                        if (isInstalled)
+                            sender.sendMessage(Lochness.getPrefix() + "Datapack is installed correctly, \"lochness:root\" could be granted");
+                        else {
+                            sender.sendMessage(Lochness.getPrefix() + "Datapack is not correctly installed, \"lochness:root\" couldn't be granted");
+                            sender.sendMessage("Try to install it manually and ensure, it is a valid uncorruptede zip file");
+                        }
+                        break;
+                    default: sender.sendMessage(Lochness.getPrefix() + ChatColor.RED + "invalid arguments");
+                }
+                break;
+
+            case "resourcepack":
+                switch (args[1]) {
+                    case "downloadlink":
+                        sender.sendMessage(Lochness.getPrefix() + "Resourcepack Downloadlink: " + ChatColor.YELLOW + Lochness.RESOURCEPACK_DOWNLOAD_LINK);
+                        break;
+                }
+                break;
+
+            default: sender.sendMessage(Lochness.getPrefix() + ChatColor.RED + "invalid arguments");
+
         }
 
-
-        String s = args[1];
-        switch(args[0]){
-            case "debug": {
-                if(s.equals("monsterReadError")) {
-                    LochnessEntity.resetAllEntities();
-                    sender.sendMessage(Lochness.getPrefix() + "All Plugin-Entities have been removed and reset. Errors should be fixed now");
-                }
-                else if(s.equals("openPortal")) {
-                    PortalOpenEvent.openPortal();
-                }
-                else if(s.equals("resetStructures")) {
-                    CaveLogic.resetCave();
-                }
-                else if(s.equals("sendCommandFeedbackFalse")) {
-                    for(World w: Bukkit.getWorlds()) {
-                        w.setGameRule(GameRule.SEND_COMMAND_FEEDBACK, false);
-                    }
-                }
-            }
-        }
         return false;
     }
 

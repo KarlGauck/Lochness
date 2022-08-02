@@ -68,11 +68,16 @@ public class PluginUtils {
         return damadge;
     }
 
-    public static void grantAdvancement(Player player, String namespacedKey) {
-        NamespacedKey key = NamespacedKey.fromString(namespacedKey);
-        AdvancementProgress progress = player.getAdvancementProgress(Bukkit.getAdvancement(key));
-        for(String criteria : progress.getRemainingCriteria())
-            progress.awardCriteria(criteria);
+    public static Boolean grantAdvancement(Player player, String namespacedKey) {
+        try {
+            NamespacedKey key = NamespacedKey.fromString(namespacedKey);
+            AdvancementProgress progress = player.getAdvancementProgress(Bukkit.getAdvancement(key));
+            for (String criteria : progress.getRemainingCriteria())
+                progress.awardCriteria(criteria);
+        } catch (Exception e) {
+            return false;
+        }
+        return true;
     }
 
 }
