@@ -32,7 +32,7 @@ public class MusicCommand implements TabExecutor {
         if(args[0].equals("disable")) {
             p.removeScoreboardTag("music=true");
             p.addScoreboardTag("music=false");
-            p.stopSound(SoundClass.sounds[SoundClass.song]);
+            p.stopSound(SoundCategory.MASTER);
         }
         if(args[0].equals("volume")) {
             if(args.length < 2) {
@@ -43,7 +43,7 @@ public class MusicCommand implements TabExecutor {
                 float volume = Float.parseFloat(args[1].replaceAll("%", "")) / 100;
                 removeVolume(p);
                 p.addScoreboardTag("music_volume=" + volume + "f");
-                p.sendMessage(Lochness.getPrefix() + "volume is at " + volume);
+                p.sendMessage(Lochness.getPrefix() + "volume is at " + volume * 100 + "%");
             } catch (Exception e)  {
                 p.sendMessage(Lochness.getPrefix() + "volume is not a float pls. use '0.5' for example");
             }

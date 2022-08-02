@@ -1,6 +1,5 @@
 package me.karl.lochness.entities;
 
-import javafx.util.Pair;
 import me.karl.lochness.Lochness;
 import me.karl.lochness.entities.ceberos.Cerberus;
 import me.karl.lochness.entities.lochness.LochnessBoss;
@@ -220,7 +219,7 @@ public abstract class LochnessEntity implements Serializable{
     }
 
     public static void resetAllEntities() {
-        CaveLogic.resetEntities();
+        CaveLogic.clearEntities();
         entities.clear();
 
         File entityPath = new File("./" + Bukkit.getWorlds().get(0).getName() + "/LochnessEntities");

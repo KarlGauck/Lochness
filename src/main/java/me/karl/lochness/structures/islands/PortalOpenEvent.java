@@ -21,6 +21,8 @@ public class PortalOpenEvent implements Listener {
     static Location tower3 = null;
     static Location tower4 = null;
 
+    public static Boolean isPortalOpen = false;
+
     @EventHandler
     public void onTridentPortalEvent(EntityDamageByEntityEvent event) {
 
@@ -100,6 +102,7 @@ public class PortalOpenEvent implements Listener {
     }
 
     public static void openPortal() {
+
         tower1 = Lochness.getIslandLoc().add(new Vector(30, 68, 0));
         tower2 = Lochness.getIslandLoc().add(new Vector(-30, 68, 0));
         tower3 = Lochness.getIslandLoc().add(new Vector(0, 68, 30));
@@ -127,6 +130,8 @@ public class PortalOpenEvent implements Listener {
         Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "advancement grant @a only minecraft:story/enter_the_end");
         CaveLogic.spawnEntities();
         CaveLogic.isResetingCave = false;
+
+        isPortalOpen = true;
 
     }
 

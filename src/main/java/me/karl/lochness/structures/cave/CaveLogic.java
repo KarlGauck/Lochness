@@ -157,7 +157,7 @@ public class CaveLogic {
                     p.teleport(Lochness.getIslandLoc().add(new Vector(0, 67, 0)));
                 }
             }
-            resetEntities();
+            clearEntities();
             BlockBreakEvent.initValues();
             LochnessBoss.resetEffectValues();
             InteractionEvent.interacted = false;
@@ -215,7 +215,7 @@ public class CaveLogic {
         }
     }
 
-    public static void resetEntities() {
+    public static void clearEntities() {
         for (LochnessEntity e : LochnessEntity.getEntities()) {
             if (e instanceof WaterMonster)
                 e.remove();

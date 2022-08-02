@@ -43,6 +43,11 @@ public class SoundClass {
 
     public static void playNextSong() {
 
+        int index = song++;
+        if(song >= sounds.length)
+            song = 0;
+        songTime = soundTime[index];
+
         for(Player p: Bukkit.getOnlinePlayers()) {
             Location loc = p.getLocation();
 
@@ -52,22 +57,20 @@ public class SoundClass {
             if (loc.getBlockZ() < 144 || loc.getBlockZ() > 144 + (48 * 3))
                 continue;
 
-            if(p.getScoreboardTags().contains("music=false"))
-                continue;
-
-            if(!hasVolume(p)) {
-                p.addScoreboardTag("music_volume=1.0f");
-            }
-
-
-            int index = song++;
-            if(song >= sounds.length)
-                song = 0;
-
-            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "execute as " + p.getName() + " at @s run playsound " + sounds[index] + " master @s ~ ~ ~ " + getVolume(p) + " 1");
-            songTime = soundTime[index];
+            playSong(p, sounds[index]);
         }
 
+    }
+
+    public static void playSong(Player player, String song) {
+        if(player.getScoreboardTags().contains("music=false"))
+            return;
+
+        if(!hasVolume(player)) {
+            player.addScoreboardTag("music_volume=1.0f");
+        }
+
+        Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "execute as " + player.getName() + " at @s run playsound " + song + " master @s ~ ~ ~ " + getVolume(player) + " 1");
     }
 
     public static boolean hasVolume(Player p) {

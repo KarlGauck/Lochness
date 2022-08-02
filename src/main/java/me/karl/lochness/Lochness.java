@@ -1,7 +1,7 @@
 package me.karl.lochness;
 
 import me.karl.lochness.Events.*;
-import me.karl.lochness.commandexecutor.Debug;
+import me.karl.lochness.commandexecutor.LochnessCommand;
 import me.karl.lochness.commandexecutor.GuideCommand;
 import me.karl.lochness.commandexecutor.MusicCommand;
 import me.karl.lochness.enchantments.poseidonspower.CustomEnchants;
@@ -108,8 +108,8 @@ public final class Lochness extends JavaPlugin {
     private void registerCommands() {
         getCommand("music").setExecutor(new MusicCommand());
         getCommand("music").setTabCompleter(new MusicCommand());
-        getCommand("debugLochness").setExecutor(new Debug());
-        getCommand("debugLochness").setTabCompleter(new Debug());
+        getCommand("endboss").setExecutor(new LochnessCommand());
+        getCommand("endboss").setTabCompleter(new LochnessCommand());
         getCommand("guide").setExecutor(new GuideCommand());
     }
 
@@ -261,6 +261,8 @@ public final class Lochness extends JavaPlugin {
                 StructureLoader.pregenerateArea(islandLoc.clone(), 14);
                 CaveLogic.generateTotalCave();
                 StructureLoader.fixLoadingIssues();
+
+                PortalOpenEvent.isPortalOpen = getIslandLoc().clone().add(new Vector(0, 67, 7)).getBlock().getType() != Material.SAND;
 
                 restart = false;
             }

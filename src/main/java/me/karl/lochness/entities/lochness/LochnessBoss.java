@@ -1,9 +1,8 @@
 package me.karl.lochness.entities.lochness;
 
-import javafx.util.Pair;
 import me.karl.lochness.Lochness;
 import me.karl.lochness.PluginUtils;
-import me.karl.lochness.commandexecutor.Debug;
+import me.karl.lochness.commandexecutor.LochnessCommand;
 import me.karl.lochness.entities.Hitbox;
 import me.karl.lochness.entities.LochnessEntity;
 import me.karl.lochness.structures.cave.BlockBreakEvent;
@@ -754,7 +753,7 @@ public class LochnessBoss extends LochnessEntity implements Serializable {
         headHitbox.setLocation(head.getLocation().subtract(new Vector(0.75, -0.5, 0.75)));
         neckHitbox.setLocation(neck.getLocation().subtract(new Vector(0.75, -0.5, 0.75)));
 
-        if (Debug.showHitbox) {
+        if (LochnessCommand.showHitbox) {
             headHitbox.display();
             neckHitbox.display();
         }
@@ -763,14 +762,14 @@ public class LochnessBoss extends LochnessEntity implements Serializable {
             if (bodyHitbox[hitboxIndex] == null)
                 bodyHitbox[hitboxIndex] = new Hitbox(body[hitboxIndex].getLocation(), 1.5, 1, 1.5);
             bodyHitbox[hitboxIndex].setLocation(body[hitboxIndex].getLocation().subtract(new Vector(0.75, -0.5, 0.75)));
-            if (Debug.showHitbox)
+            if (LochnessCommand.showHitbox)
                 bodyHitbox[hitboxIndex].display();
         }
         for (int hitboxIndex = 0; hitboxIndex < tailHitbox.length; hitboxIndex++) {
             if (tailHitbox[hitboxIndex] == null)
                 tailHitbox[hitboxIndex] = new Hitbox(tail[hitboxIndex].getLocation(), 1.5, 1, 1.5);
             tailHitbox[hitboxIndex].setLocation(tail[hitboxIndex].getLocation().subtract(new Vector(0.75, -0.5, 0.75)));
-            if (Debug.showHitbox)
+            if (LochnessCommand.showHitbox)
                 tailHitbox[hitboxIndex].display();
         }
 

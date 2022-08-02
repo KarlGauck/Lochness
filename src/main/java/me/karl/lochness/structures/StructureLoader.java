@@ -1,6 +1,8 @@
 package me.karl.lochness.structures;
 
 import me.karl.lochness.Lochness;
+import me.karl.lochness.structures.cave.CaveLogic;
+import me.karl.lochness.structures.islands.PortalOpenEvent;
 import org.bukkit.*;
 import org.bukkit.util.Vector;
 
@@ -80,6 +82,7 @@ public class StructureLoader {
                 }
             }
         }
+        new Location(Bukkit.getWorlds().get(2), 676, 66, 216).getBlock().setType(Material.ENDER_CHEST);
     }
 
     //----------------------------------------  ISLAND GENERATION  -------------------------------------------------------------------//
@@ -155,6 +158,8 @@ public class StructureLoader {
         Lochness.getIslandLoc().getBlock().setType(Material.LODESTONE);
 
         areIslandsGenerated = true;
+
+        PortalOpenEvent.isPortalOpen = false;
 
     }
 

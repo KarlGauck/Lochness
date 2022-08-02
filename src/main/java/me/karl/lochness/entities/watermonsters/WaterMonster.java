@@ -1,9 +1,8 @@
 package me.karl.lochness.entities.watermonsters;
 
-import javafx.util.Pair;
 import me.karl.lochness.Lochness;
 import me.karl.lochness.PluginUtils;
-import me.karl.lochness.commandexecutor.Debug;
+import me.karl.lochness.commandexecutor.LochnessCommand;
 import me.karl.lochness.entities.Hitbox;
 import me.karl.lochness.entities.LochnessEntity;
 import me.karl.lochness.structures.cave.CaveLogic;
@@ -11,14 +10,11 @@ import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.*;
 import org.bukkit.inventory.ItemStack;
-import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.loot.LootTables;
 import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.RayTraceResult;
-import org.bukkit.util.Vector;
 
-import java.util.Random;
 import java.util.UUID;
 
 public class WaterMonster extends LochnessEntity {
@@ -120,7 +116,7 @@ public class WaterMonster extends LochnessEntity {
 
             hitbox = getHitbox();
 
-            if(hitbox != null && Debug.showHitbox)
+            if(hitbox != null && LochnessCommand.showHitbox)
                 hitbox.display();
 
             calculateProjectiles();

@@ -8,8 +8,8 @@ description: A new minecraft endboss, living deep down in the gloomy ocean, even
 commands:
   music:
     description: enable or disable music during endfight
-  debugLochness:
-    description: multiple debug options for the lochness plugin
+  endboss:
+    description: multiple options for the lochness plugin
   guide:
     description: you will get a Lochness-Guide
 
