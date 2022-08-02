@@ -182,9 +182,6 @@ public class BlockBreakEvent implements Listener {
 
         }
 
-        if (block.getType() == Material.SHULKER_BOX)
-            return;
-
         event.setCancelled(true);
     }
 

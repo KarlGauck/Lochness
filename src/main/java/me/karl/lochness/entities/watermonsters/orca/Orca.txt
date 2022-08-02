@@ -37,7 +37,6 @@ public class LochnessOrca extends WaterMonster {
     @Override
     protected void movementLogic() {
 
-        Bukkit.broadcastMessage(drowned.getTarget().getName());
         if((drowned.getTarget() instanceof Player) && isTargetValid((Player)drowned.getTarget(), drowned.getWorld())) {
             if (isDrownedActive) {
                 if (drowned.getTarget().getLocation().distance(drowned.getLocation()) < 13)

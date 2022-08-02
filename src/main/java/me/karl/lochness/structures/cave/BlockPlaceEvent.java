@@ -26,9 +26,6 @@ public class BlockPlaceEvent implements Listener {
         if (loc.getBlockZ() < 144 || loc.getBlockZ() > 144 + (48 * 3))
             return;
 
-        if (block.getType() == Material.SHULKER_BOX)
-            return;
-
         event.setCancelled(true);
     }
 

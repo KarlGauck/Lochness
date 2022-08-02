@@ -51,6 +51,14 @@ public class        LochnessOrca extends WaterMonster {
     }
 
     @Override
+    public Runnable tick() {
+        return () -> {
+            dolphin = (Dolphin) Bukkit.getEntity(dolphinUUID);
+            armorStand = (ArmorStand) Bukkit.getEntity(armorStandUUID);
+            super.tick().run();
+        };
+    }
+    @Override
     protected void movementLogic() {
 
         try {

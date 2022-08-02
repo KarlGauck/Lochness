@@ -126,6 +126,7 @@ public class PortalOpenEvent implements Listener {
 
         Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "advancement grant @a only minecraft:story/enter_the_end");
         CaveLogic.spawnEntities();
+        CaveLogic.isResetingCave = false;
 
     }
 

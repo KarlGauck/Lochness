@@ -244,6 +244,21 @@ public class LochnessBoss extends LochnessEntity implements Serializable {
             @Override
             public void run() {
 
+                // Ensure, Entities are accessed correctly
+                drowned = (Drowned) Bukkit.getEntity(drownedUUID);
+                drowned.setCollidable(false);
+                drowned.setPersistent(true);
+                dolphin = (Dolphin) Bukkit.getEntity(dolphinUUID);
+                dolphin.setCollidable(false);
+                head = (ArmorStand) Bukkit.getEntity(headUUID);
+                neck = (ArmorStand) Bukkit.getEntity(neckUUID);
+                for (int bodyPart = 0; bodyPart < body.length; bodyPart++) {
+                    body[bodyPart] = (ArmorStand) Bukkit.getEntity(bodyUUID[bodyPart]);
+                }
+                for (int tailPart = 0; tailPart < tail.length; tailPart++) {
+                    tail[tailPart] = (ArmorStand) Bukkit.getEntity(tailUUID[tailPart]);
+                }
+
                 if (!drowned.getLocation().getChunk().isLoaded())
                     return;
                 if (!drowned.getLocation().getChunk().isEntitiesLoaded())

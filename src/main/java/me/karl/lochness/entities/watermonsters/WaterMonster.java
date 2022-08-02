@@ -6,6 +6,7 @@ import me.karl.lochness.PluginUtils;
 import me.karl.lochness.commandexecutor.Debug;
 import me.karl.lochness.entities.Hitbox;
 import me.karl.lochness.entities.LochnessEntity;
+import me.karl.lochness.structures.cave.CaveLogic;
 import org.bukkit.*;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.*;
@@ -55,7 +56,6 @@ public class WaterMonster extends LochnessEntity {
 
         assert drowned != null;
         resetDrowned(drowned.getLocation());
-        Bukkit.broadcastMessage("testmessage: reset constructor watermonster");
         timeSinceLastSpecialAttack = waterMonster.timeSinceLastSpecialAttack;
         timeSinceLastHit = waterMonster.timeSinceLastHit;
     }
@@ -65,78 +65,69 @@ public class WaterMonster extends LochnessEntity {
         initValues();
         health = MAXIMUM_HEALTH;
         spawnDrowned(loc);
-        Bukkit.broadcastMessage("testmessage: reset constructor location");
     }
 
     public Runnable tick() {
-        return new Runnable() {
-            @Override
-            public void run() {
+        return () -> {
 
-                // Only calculate if player is near
-                Boolean nearbyPlayer = false;
-                for(Entity entity: drowned.getNearbyEntities(80.0, 80.0, 80.0)) {
-                    if (entity.getType() == EntityType.PLAYER)
-                        nearbyPlayer = true;
+            drowned = (Drowned) Bukkit.getEntity(drownedUUID);
+
+            // Only calculate if player is near
+            Boolean nearbyPlayer = false;
+            for(Entity entity: drowned.getNearbyEntities(80.0, 80.0, 80.0)) {
+                if (entity.getType() == EntityType.PLAYER)
+                    nearbyPlayer = true;
+            }
+            if (!nearbyPlayer)
+                return;
+
+            timeLived++;
+
+            // ------ Kill old drowneds ------
+            for (Entity entity : drowned.getWorld().getEntities()) {
+                if (entity.getScoreboardTags().contains("dead")) {
+                    entity.remove();
+                    if (entity instanceof LivingEntity)
+                        ((LivingEntity) entity).setHealth(0.0);
                 }
-                if (!nearbyPlayer)
-                    return;
+            }
 
-                // Only calculate if chunk is loaded
-                if (!drowned.getLocation().getChunk().isLoaded() || !drowned.getLocation().getChunk().isEntitiesLoaded())
-                    return;
+            // ------ if dead ------
+            checkIfDead();
 
+            // Fix movementbug
+            boolean isAttacking = timeSinceLastSpecialAttack < SPECIAL_ATTACK_FEEDBACK + SPECIAL_ATTACK_DURATION;
 
-
-                timeLived++;
-
-                // ------ Kill old drowneds ------
-                for (Entity entity : drowned.getWorld().getEntities()) {
-                    if (entity.getScoreboardTags().contains("dead")) {
-                        entity.remove();
-                        if (entity instanceof LivingEntity)
-                            ((LivingEntity) entity).setHealth(0.0);
-                    }
-                }
-
-                // ------ if dead ------
-                checkIfDead();
-
-                // Fix movementbug
-                boolean isAttacking = timeSinceLastSpecialAttack < SPECIAL_ATTACK_FEEDBACK + SPECIAL_ATTACK_DURATION;
-
-                if((!isAttacking) && lastLoc != null) {
-                    if (lastLoc.toVector().distance(drowned.getLocation().toVector()) < 0.05) {
-                        falseMovements++;
-                    } else {
-                        falseMovements = 0;
-                    }
-                }
-                lastLoc = drowned.getLocation();
-
-                if(falseMovements > 40) {
-                    // Bukkit.broadcastMessage("testmessage: reset drowned falseMovement");
-                    // resetDrowned(drowned.getLocation());
+            if((!isAttacking) && lastLoc != null) {
+                if (lastLoc.toVector().distance(drowned.getLocation().toVector()) < 0.05) {
+                    falseMovements++;
+                } else {
                     falseMovements = 0;
                 }
-
-                // ------ Potion Effects and stuff ------
-                if (timeLived % 10000 == 0) {
-                    Bukkit.broadcastMessage("testmessage: reset drowned time lived");
-                    resetDrowned(drowned.getLocation());
-                }
-
-                hitbox = getHitbox();
-
-                if(hitbox != null && Debug.showHitbox)
-                    hitbox.display();
-
-                calculateProjectiles();
-                movementLogic();
-                if (drowned.isSwimming())
-                    attackLogic();
-
             }
+            lastLoc = drowned.getLocation();
+
+            if(falseMovements > 40) {
+                // Bukkit.broadcastMessage("testmessage: reset drowned falseMovement");
+                // resetDrowned(drowned.getLocation());
+                falseMovements = 0;
+            }
+
+            // ------ Potion Effects and stuff ------
+            if (timeLived % 10000 == 0) {
+                resetDrowned(drowned.getLocation());
+            }
+
+            hitbox = getHitbox();
+
+            if(hitbox != null && Debug.showHitbox)
+                hitbox.display();
+
+            calculateProjectiles();
+            movementLogic();
+            if (drowned.isSwimming())
+                attackLogic();
+
         };
     }
 
@@ -228,7 +219,6 @@ public class WaterMonster extends LochnessEntity {
             drowned.remove();
             drowned.setHealth(0);
         }
-        Bukkit.broadcastMessage("drowned was reset");
         spawnDrowned(loc);
     }
 
@@ -268,14 +258,13 @@ public class WaterMonster extends LochnessEntity {
         drowned.remove();
         drowned.setHealth(0);
         stop();
-        if (!LochnessEntity.isEntityAlive(this.getClass()) && !Lochness.shutdown && !Lochness.restart) {
+        if (!LochnessEntity.isEntityAlive(this.getClass()) && !Lochness.shutdown && !Lochness.restart && !CaveLogic.isResetingCave) {
             this.getBarLocation().getBlock().setType(Material.WATER);
         }
     }
 
     @Override
     protected void save() {
-        Bukkit.broadcastMessage("save");
         world = Bukkit.getWorlds().indexOf(drowned.getWorld());
         chunkX = drowned.getLocation().getChunk().getX();
         chunkZ = drowned.getLocation().getChunk().getZ();

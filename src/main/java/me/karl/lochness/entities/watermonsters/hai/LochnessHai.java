@@ -80,8 +80,6 @@ public class LochnessHai extends WaterMonster {
     }
 
     public Hitbox getHitbox() {
-        Stack<Integer> stack = new Stack<>();
-        LinkedList<Integer> list = new LinkedList<>();
         return new Hitbox(drowned.getLocation().subtract(new Vector(0.5, -0.25, 0.5)), 1, 1, 1);
     }
 

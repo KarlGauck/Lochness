@@ -118,7 +118,6 @@ public abstract class LochnessEntity implements Serializable{
                         + entities.indexOf(entity) + ".txt");
                 objectOutputStream = new ObjectOutputStream(fileOutputStream);
                 objectOutputStream.writeObject(entity);
-                Bukkit.broadcastMessage("wrote entity");
                 fileOutputStream.close();
                 objectOutputStream.close();
             }
@@ -138,7 +137,6 @@ public abstract class LochnessEntity implements Serializable{
         try {
 
             for(File file: entityPath.listFiles()) {
-                Bukkit.broadcastMessage(file.getName() + "filenamehahhe");
                 FileInputStream fileInputStream = new FileInputStream("./" + Bukkit.getWorlds().get(0).getName() + "/LochnessEntities/" + file.getName());
                 objectInputStream = new ObjectInputStream(fileInputStream);
 
@@ -162,7 +160,6 @@ public abstract class LochnessEntity implements Serializable{
     }
 
     public static void loadEntity(LochnessEntity entity, String filename) {
-        Bukkit.broadcastMessage(filename);
         // ------ instanciate entity based on name, given when saved ------
         if(filename.contains("LochnessBoss"))
             new LochnessBoss((LochnessBoss) entity);

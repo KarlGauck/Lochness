@@ -75,6 +75,8 @@ public class CaveLogic {
     public static final int NARWAL_COUNT = 3;
     public static final int KRABBE_COUNT = 8;
 
+    public static Boolean isResetingCave = false;
+
     public static void generateTotalCave() {
 
         if (!generated.exists()) {
@@ -91,6 +93,7 @@ public class CaveLogic {
     }
 
     public static void resetCave() {
+        isResetingCave = true;
         StructureLoader.generateCave();
         Bukkit.getScheduler().runTaskLater(Lochness.getPlugin(), () -> {
             if(generated.exists()) {
@@ -158,11 +161,11 @@ public class CaveLogic {
             BlockBreakEvent.initValues();
             LochnessBoss.resetEffectValues();
             InteractionEvent.interacted = false;
+            isResetingCave = false;
         },2);
     }
 
     public static void spawnEntities() {
-        Bukkit.broadcastMessage("test message: spawn Entities()");
         // --- Spawn LochnessBoss ---
         new LochnessBoss(lochnessSpawnLocation);
 

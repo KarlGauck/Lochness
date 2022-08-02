@@ -67,8 +67,6 @@ public class MoveEvent implements Listener {
 
             player.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 42, 0, true, false));
             player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW_FALLING, 42, 1, true, false));
-            if(!player.isOnGround())
-                player.setVelocity(player.getVelocity().setY(-0.4));
             if(!player.getScoreboardTags().contains("falling_ready")) {
                 for(Player p: Bukkit.getOnlinePlayers()) {
                     if(!p.getUniqueId().equals(player.getUniqueId())) {
@@ -80,7 +78,7 @@ public class MoveEvent implements Listener {
             Vector velocity = player.getVelocity();
 
             if (playerLoc.getY() <= 43)
-                player.teleport(playerLoc.add(new Vector(0, 13.5, 0)));
+                player.teleport(playerLoc.add(new Vector(0, 15 , 0)));
             else
                 break FALL;
 

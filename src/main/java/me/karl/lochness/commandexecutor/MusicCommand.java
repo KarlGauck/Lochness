@@ -36,11 +36,11 @@ public class MusicCommand implements TabExecutor {
         }
         if(args[0].equals("volume")) {
             if(args.length < 2) {
-                p.sendMessage(Lochness.getPrefix() + "your volume is at " + SoundClass.getVolume(p));
+                p.sendMessage(Lochness.getPrefix() + "your volume is at " + SoundClass.getVolume(p) * 100 + "%");
                 return false;
             }
             try {
-                float volume = Float.valueOf(args[1]);
+                float volume = Float.parseFloat(args[1].replaceAll("%", "")) / 100;
                 removeVolume(p);
                 p.addScoreboardTag("music_volume=" + volume + "f");
                 p.sendMessage(Lochness.getPrefix() + "volume is at " + volume);
