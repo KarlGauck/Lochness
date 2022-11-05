@@ -2,16 +2,14 @@ package me.karl.lochness.structures.cave;
 
 import me.karl.lochness.Lochness;
 import me.karl.lochness.structures.hadesroom.ItemFrameEvent;
-import org.bukkit.Bukkit;
-import org.bukkit.ChatColor;
-import org.bukkit.Location;
-import org.bukkit.Material;
+import org.bukkit.*;
 import org.bukkit.block.Block;
 import org.bukkit.block.data.BlockData;
 import org.bukkit.block.data.Waterlogged;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Item;
 import org.bukkit.entity.ItemFrame;
+import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 import org.bukkit.event.hanging.HangingPlaceEvent;
@@ -100,73 +98,63 @@ public class CageOpenEvent implements Listener {
         Waterlogged data = (Waterlogged) Material.CRIMSON_FENCE.createBlockData();
         data.setWaterlogged(true);
 
-        Bukkit.getScheduler().runTaskLater(Lochness.getPlugin(), new Runnable() {
-            @Override
-            public void run() {
-                center.clone().add(new Vector(0, 1, 0)).getBlock().setType(Material.WATER);
-                center.clone().add(new Vector(0, -1, 0)).getBlock().setType(Material.WATER);
-                center.clone().add(dir.getPosUp1()).getBlock().setType(Material.CRIMSON_FENCE);
-                center.clone().add(dir.getPosDown1()).getBlock().setType(Material.CRIMSON_FENCE);
-                center.clone().add(dir.getPosDown1()).getBlock().setBlockData(data);
-                center.clone().add(dir.getPosUp1()).getBlock().setBlockData(data);
-            }
+        for (Player player: Bukkit.getWorlds().get(2).getPlayers())
+        {
+            player.playSound(center, Sound.ENTITY_ELDER_GUARDIAN_DEATH, 1, 1);
+        }
+
+        Bukkit.getScheduler().runTaskLater(Lochness.getPlugin(), () -> {
+            center.clone().add(new Vector(0, 1, 0)).getBlock().setType(Material.WATER);
+            center.clone().add(new Vector(0, -1, 0)).getBlock().setType(Material.WATER);
+            center.clone().add(dir.getPosUp1()).getBlock().setType(Material.CRIMSON_FENCE);
+            center.clone().add(dir.getPosDown1()).getBlock().setType(Material.CRIMSON_FENCE);
+            center.clone().add(dir.getPosDown1()).getBlock().setBlockData(data);
+            center.clone().add(dir.getPosUp1()).getBlock().setBlockData(data);
         }, 10);
 
-        Bukkit.getScheduler().runTaskLater(Lochness.getPlugin(), new Runnable() {
-            @Override
-            public void run() {
-                center.clone().add(dir.getPosUp1()).getBlock().setType(Material.WATER);
-                center.clone().add(dir.getPosDown1()).getBlock().setType(Material.WATER);
-                center.clone().add(dir.getPosUp2()).getBlock().setType(Material.CRIMSON_FENCE);
-                center.clone().add(dir.getPosDown2()).getBlock().setType(Material.CRIMSON_FENCE);
-                center.clone().add(dir.getPosDown2()).getBlock().setBlockData(data);
-                center.clone().add(dir.getPosUp2()).getBlock().setBlockData(data);
-            }
+        Bukkit.getScheduler().runTaskLater(Lochness.getPlugin(), () -> {
+            center.clone().add(dir.getPosUp1()).getBlock().setType(Material.WATER);
+            center.clone().add(dir.getPosDown1()).getBlock().setType(Material.WATER);
+            center.clone().add(dir.getPosUp2()).getBlock().setType(Material.CRIMSON_FENCE);
+            center.clone().add(dir.getPosDown2()).getBlock().setType(Material.CRIMSON_FENCE);
+            center.clone().add(dir.getPosDown2()).getBlock().setBlockData(data);
+            center.clone().add(dir.getPosUp2()).getBlock().setBlockData(data);
         }, 20);
 
-        Bukkit.getScheduler().runTaskLater(Lochness.getPlugin(), new Runnable() {
-            @Override
-            public void run() {
-                center.clone().add(dir.getPosUp2()).getBlock().setType(Material.WATER);
-                center.clone().add(dir.getPosDown2()).getBlock().setType(Material.WATER);
-                center.clone().add(dir.getPosUp3()).getBlock().setType(Material.CRIMSON_FENCE);
-                center.clone().add(dir.getPosDown3()).getBlock().setType(Material.CRIMSON_FENCE);
-                center.clone().add(dir.getPosDown3()).getBlock().setBlockData(data);
-                center.clone().add(dir.getPosUp3()).getBlock().setBlockData(data);
-            }
+        Bukkit.getScheduler().runTaskLater(Lochness.getPlugin(), () -> {
+            center.clone().add(dir.getPosUp2()).getBlock().setType(Material.WATER);
+            center.clone().add(dir.getPosDown2()).getBlock().setType(Material.WATER);
+            center.clone().add(dir.getPosUp3()).getBlock().setType(Material.CRIMSON_FENCE);
+            center.clone().add(dir.getPosDown3()).getBlock().setType(Material.CRIMSON_FENCE);
+            center.clone().add(dir.getPosDown3()).getBlock().setBlockData(data);
+            center.clone().add(dir.getPosUp3()).getBlock().setBlockData(data);
         }, 30);
 
-        Bukkit.getScheduler().runTaskLater(Lochness.getPlugin(), new Runnable() {
-            @Override
-            public void run() {
-                center.clone().add(dir.getPosUp3()).getBlock().setType(Material.WATER);
-                center.clone().add(dir.getPosDown3()).getBlock().setType(Material.WATER);
-                center.clone().add(dir.getPosUp4()).getBlock().setType(Material.CRIMSON_FENCE);
-                center.clone().add(dir.getPosDown4()).getBlock().setType(Material.CRIMSON_FENCE);
-                center.clone().add(dir.getPosDown4()).getBlock().setBlockData(data);
-                center.clone().add(dir.getPosUp4()).getBlock().setBlockData(data);
-            }
+        Bukkit.getScheduler().runTaskLater(Lochness.getPlugin(), () -> {
+            center.clone().add(dir.getPosUp3()).getBlock().setType(Material.WATER);
+            center.clone().add(dir.getPosDown3()).getBlock().setType(Material.WATER);
+            center.clone().add(dir.getPosUp4()).getBlock().setType(Material.CRIMSON_FENCE);
+            center.clone().add(dir.getPosDown4()).getBlock().setType(Material.CRIMSON_FENCE);
+            center.clone().add(dir.getPosDown4()).getBlock().setBlockData(data);
+            center.clone().add(dir.getPosUp4()).getBlock().setBlockData(data);
         }, 40);
 
-        Bukkit.getScheduler().runTaskLater(Lochness.getPlugin(), new Runnable() {
-            @Override
-            public void run() {
-                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "execute in minecraft:the_end run fill "
-                        + (center.getBlockX() - 1) + " " + (center.getBlockY() - 1) + " " + (center.getBlockZ() - 1) + " "
-                        + (center.getBlockX() + 1) + " " + (center.getBlockY() + 1) + " " + (center.getBlockZ() + 1) + " water replace crimson_wall_sign"
-                );
-                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "execute in minecraft:the_end run fill "
-                        + (center.getBlockX() - 1) + " " + (center.getBlockY() - 1) + " " + (center.getBlockZ() - 1) + " "
-                        + (center.getBlockX() + 1) + " " + (center.getBlockY() + 1) + " " + (center.getBlockZ() + 1) + " water replace iron_bars"
-                );
-                Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "execute in minecraft:the_end run fill "
-                        + (center.getBlockX() - 1) + " " + (center.getBlockY() - 1) + " " + (center.getBlockZ() - 1) + " "
-                        + (center.getBlockX() + 1) + " " + (center.getBlockY() + 1) + " " + (center.getBlockZ() + 1) + " water replace chiseled_stone_bricks"
-                );
-                center.clone().add(dir.getPosUp4()).getBlock().setType(Material.WATER);
-                center.clone().add(dir.getPosDown4()).getBlock().setType(Material.WATER);
-                center.clone().getBlock().setType(Material.WATER);
-            }
+        Bukkit.getScheduler().runTaskLater(Lochness.getPlugin(), () -> {
+            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "execute in minecraft:the_end run fill "
+                    + (center.getBlockX() - 1) + " " + (center.getBlockY() - 1) + " " + (center.getBlockZ() - 1) + " "
+                    + (center.getBlockX() + 1) + " " + (center.getBlockY() + 1) + " " + (center.getBlockZ() + 1) + " water replace crimson_wall_sign"
+            );
+            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "execute in minecraft:the_end run fill "
+                    + (center.getBlockX() - 1) + " " + (center.getBlockY() - 1) + " " + (center.getBlockZ() - 1) + " "
+                    + (center.getBlockX() + 1) + " " + (center.getBlockY() + 1) + " " + (center.getBlockZ() + 1) + " water replace iron_bars"
+            );
+            Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "execute in minecraft:the_end run fill "
+                    + (center.getBlockX() - 1) + " " + (center.getBlockY() - 1) + " " + (center.getBlockZ() - 1) + " "
+                    + (center.getBlockX() + 1) + " " + (center.getBlockY() + 1) + " " + (center.getBlockZ() + 1) + " water replace chiseled_stone_bricks"
+            );
+            center.clone().add(dir.getPosUp4()).getBlock().setType(Material.WATER);
+            center.clone().add(dir.getPosDown4()).getBlock().setType(Material.WATER);
+            center.clone().getBlock().setType(Material.WATER);
         }, 50);
     }
 

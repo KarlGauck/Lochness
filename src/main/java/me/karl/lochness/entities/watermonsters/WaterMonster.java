@@ -15,6 +15,7 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.RayTraceResult;
 
+import java.util.ArrayList;
 import java.util.UUID;
 
 public class WaterMonster extends LochnessEntity {
@@ -49,6 +50,7 @@ public class WaterMonster extends LochnessEntity {
         initValues();
         health = waterMonster.health;
         drowned = (Drowned) Bukkit.getEntity(waterMonster.drownedUUID);
+        drownedUUID = waterMonster.drownedUUID;
 
         assert drowned != null;
         resetDrowned(drowned.getLocation());
@@ -66,9 +68,21 @@ public class WaterMonster extends LochnessEntity {
     public Runnable tick() {
         return () -> {
 
-            drowned = (Drowned) Bukkit.getEntity(drownedUUID);
-            if (drowned == null)
+            tagEntities(LochnessEntity.entityValidityTag, LochnessEntity.entityValidityNum);
+
+            if (drowned == null) {
                 remove();
+                return;
+            }
+
+            if (!drowned.getLocation().getChunk().isLoaded()) {
+                return;
+            }
+            if (!drowned.getLocation().getChunk().isEntitiesLoaded()) {
+                return;
+            }
+
+            drowned.setRemoveWhenFarAway(false);
 
             // Only calculate if player is near
             Boolean nearbyPlayer = false;
@@ -107,7 +121,7 @@ public class WaterMonster extends LochnessEntity {
 
             if(falseMovements > 40) {
                 // Bukkit.broadcastMessage("testmessage: reset drowned falseMovement");
-                // resetDrowned(drowned.getLocation());
+                resetDrowned(drowned.getLocation());
                 falseMovements = 0;
             }
 
@@ -195,7 +209,6 @@ public class WaterMonster extends LochnessEntity {
         drowned.addPotionEffect(new PotionEffect(PotionEffectType.DAMAGE_RESISTANCE, 999999, 255, false, false));
         drowned.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, 999999, 255, false, false));
         drowned.setRemoveWhenFarAway(false);
-        drowned.setPersistent(true);
         drowned.leaveVehicle();
         drowned.setBaby();
         drowned.setSilent(true);
@@ -246,26 +259,49 @@ public class WaterMonster extends LochnessEntity {
 
     protected void checkIfDead() {
         if (drowned.getHealth() <= 0.0) {
+            Bukkit .broadcastMessage("drowned is dead");
             remove();
         }
     }
 
+    @Override
+    protected void tagEntities(String validityTag, long num) {
+        loadEntityByUIDs();
+        LochnessEntity.tagEntity(drowned, validityTag, num);
+    }
+
+    @Override
+    protected void loadEntityByUIDs() {
+        drowned = drownedUUID == null ? drowned : (Drowned) (Bukkit.getEntity(drownedUUID) == null ? drowned : Bukkit.getEntity(drownedUUID));
+    }
+
+    @Override
+    public ArrayList<UUID> getEntityUUIDs() {
+        ArrayList<UUID> list = new ArrayList<>();
+        list.add(drownedUUID);
+        return list;
+    }
+
     public void remove() {
-        drowned.addScoreboardTag("dead" + getName());
-        drowned.setLootTable(LootTables.SILVERFISH.getLootTable());
-        drowned.remove();
-        drowned.setHealth(0);
+        if (drowned != null) {
+            drowned.addScoreboardTag("dead" + getName());
+            drowned.setLootTable(LootTables.SILVERFISH.getLootTable());
+            drowned.setHealth(0);
+            drowned.remove();
+        }
         stop();
         if (!LochnessEntity.isEntityAlive(this.getClass()) && !Lochness.shutdown && !Lochness.restart && !CaveLogic.isResetingCave) {
-            this.getBarLocation().getBlock().setType(Material.WATER);
+            getBarLocation().getBlock().setType(Material.WATER);
         }
     }
 
     @Override
     protected void save() {
-        world = Bukkit.getWorlds().indexOf(drowned.getWorld());
-        chunkX = drowned.getLocation().getChunk().getX();
-        chunkZ = drowned.getLocation().getChunk().getZ();
+        if (drowned != null) {
+            world = Bukkit.getWorlds().indexOf(drowned.getWorld());
+            chunkX = drowned.getLocation().getChunk().getX();
+            chunkZ = drowned.getLocation().getChunk().getZ();
+        }
     }
 
     public void initValues() {
@@ -279,6 +315,10 @@ public class WaterMonster extends LochnessEntity {
         timeSinceLastSpecialAttack = SPECIAL_ATTACK_COOLDOWN;
         HIT_COOLDOWN = getHIT_COOLDOWN();
         headStack = getHeadStack();
+    }
+
+    public boolean allDefeated() {
+        return this.getBarLocation().getBlock().getType() != Material.IRON_BARS;
     }
 
     public Location getLocation() {

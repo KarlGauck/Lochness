@@ -3,7 +3,6 @@ package me.karl.lochness.structures.islands;
 import me.karl.lochness.Lochness;
 import me.karl.lochness.PluginUtils;
 import me.karl.lochness.enchantments.poseidonspower.CustomEnchants;
-import me.karl.lochness.structures.StructureLoader;
 import me.karl.lochness.structures.cave.CaveLogic;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;

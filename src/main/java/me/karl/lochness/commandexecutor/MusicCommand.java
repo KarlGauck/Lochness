@@ -2,7 +2,6 @@ package me.karl.lochness.commandexecutor;
 
 import me.karl.lochness.Lochness;
 import me.karl.lochness.SoundClass;
-import org.bukkit.Bukkit;
 import org.bukkit.SoundCategory;
 import org.bukkit.command.Command;
 import org.bukkit.command.CommandSender;
@@ -33,6 +32,7 @@ public class MusicCommand implements TabExecutor {
             p.removeScoreboardTag("music=true");
             p.addScoreboardTag("music=false");
             p.stopSound(SoundCategory.MASTER);
+            SoundClass.primeSong(p);
         }
         if(args[0].equals("volume")) {
             if(args.length < 2) {

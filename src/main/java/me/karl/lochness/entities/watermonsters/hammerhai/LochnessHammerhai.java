@@ -5,11 +5,26 @@ import me.karl.lochness.entities.watermonsters.WaterMonster;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Sound;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.util.Vector;
 
 public class LochnessHammerhai extends WaterMonster {
+
+
+    @Override
+    public void damadge(double damadge) {
+        super.damadge(damadge);
+        for(Entity e: drowned.getNearbyEntities(5, 5, 5)) {
+            if(e instanceof Player)
+                ((Player)e).playSound(e.getLocation(), Sound.ENTITY_STRIDER_HURT, 1, .7f);
+        }
+    }
+
+    public static final Location barLocation = new Location(Bukkit.getWorlds().get(2), 574, 38, 280);
 
     public LochnessHammerhai(LochnessHammerhai piranha) {
         super(piranha);
@@ -24,8 +39,9 @@ public class LochnessHammerhai extends WaterMonster {
         super.attackLogic();
     }
 
+    @Override
     public Location getBarLocation() {
-        return new Location(Bukkit.getWorlds().get(2), 574, 38, 280);
+        return barLocation;
     }
 
     public int getHIT_COOLDOWN() {

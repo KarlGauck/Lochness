@@ -2,6 +2,7 @@ package me.karl.lochness.Events;
 
 import me.karl.lochness.Lochness;
 import me.karl.lochness.PluginUtils;
+import me.karl.lochness.SoundClass;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.World;
@@ -65,7 +66,7 @@ public class MoveEvent implements Listener {
             if (playerLoc.getY() > 60)
                 break FALL;
 
-            player.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 32, 0, true, false));
+            player.addPotionEffect(new PotionEffect(PotionEffectType.BLINDNESS, 22, 0, true, false));
             player.addPotionEffect(new PotionEffect(PotionEffectType.SLOW_FALLING, 42, 1, true, false));
             if(!player.getScoreboardTags().contains("falling_ready")) {
                 for(Player p: Bukkit.getOnlinePlayers()) {
@@ -113,6 +114,7 @@ public class MoveEvent implements Listener {
             for(Player p: Bukkit.getOnlinePlayers()) {
                 showPlayers(event.getPlayer(), p);
             }
+            SoundClass.primeSong(event.getPlayer());
         }
 
         PORTAL_LEAVE:

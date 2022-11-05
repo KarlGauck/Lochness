@@ -62,7 +62,7 @@ public class ItemFrameEvent implements Listener {
         String string = meta.getDisplayName();
         if(string.length() < 6)
             return;
-        if(!string.substring(string.length()-6, string.length()).equals("Key #" + key))
+        if(!string.substring(string.length()-6).equals("Key #" + key))
             return;
 
         if(meta.getCustomModelData() != key)

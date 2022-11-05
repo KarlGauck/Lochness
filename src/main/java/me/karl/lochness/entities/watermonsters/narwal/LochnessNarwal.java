@@ -3,10 +3,8 @@ package me.karl.lochness.entities.watermonsters.narwal;
 import me.karl.lochness.PluginUtils;
 import me.karl.lochness.entities.Hitbox;
 import me.karl.lochness.entities.watermonsters.WaterMonster;
-import org.bukkit.Bukkit;
-import org.bukkit.Location;
-import org.bukkit.Material;
-import org.bukkit.Particle;
+import org.bukkit.*;
+import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
@@ -17,6 +15,8 @@ import org.bukkit.util.Vector;
 import java.util.Random;
 
 public class LochnessNarwal extends WaterMonster {
+
+    public static final Location barLocation = new Location(Bukkit.getWorlds().get(2), 644, 52, 147);
 
     public LochnessNarwal(LochnessNarwal piranha) {
         super(piranha);
@@ -68,8 +68,18 @@ public class LochnessNarwal extends WaterMonster {
 
     }
 
+    @Override
+    public void damadge(double damadge) {
+        super.damadge(damadge);
+        for(Entity e: drowned.getNearbyEntities(5, 5, 5)) {
+            if(e instanceof Player)
+                ((Player)e).playSound(e.getLocation(), Sound.ENTITY_GLOW_SQUID_HURT, 1, 1);
+        }
+    }
+
+    @Override
     public Location getBarLocation() {
-        return new Location(Bukkit.getWorlds().get(2), 644, 52, 147);
+        return barLocation;
     }
 
     public int getHIT_COOLDOWN() {

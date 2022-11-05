@@ -2,18 +2,16 @@ package me.karl.lochness.structures.islands;
 
 import me.karl.lochness.Lochness;
 import me.karl.lochness.structures.StructureLoader;
-import org.bukkit.*;
+import org.bukkit.Chunk;
+import org.bukkit.Location;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
 
-import java.util.ArrayList;
-import java.util.Arrays;
 import java.util.Random;
 
 public class IslandLoadEvent implements Listener {
 
     Random ran = new Random();
-    ArrayList<Location> chestLoc = new ArrayList<>();
     public static boolean islandRegenerated = true;
 
     @EventHandler

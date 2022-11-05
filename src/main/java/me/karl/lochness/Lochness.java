@@ -152,6 +152,7 @@ public final class Lochness extends JavaPlugin {
         Bukkit.getPluginManager().registerEvents(new InventoryClickEvent(), this);
         Bukkit.getPluginManager().registerEvents(new TridentWaterEvent(), this);
         Bukkit.getPluginManager().registerEvents(new SpawnEvent(), this);
+        Bukkit.getPluginManager().registerEvents(new InvChangeEvent(), this);
     }
 
     private void registerScedules() {
@@ -280,6 +281,9 @@ public final class Lochness extends JavaPlugin {
             CaveLogic.particleLoop();
             InteractionEvent.particleLoop();
             SoundClass.soundLoop();
+            if (TIME_RUNNING % 20 == 0)
+                LochnessEntity.verifyEntities();
+            LochnessEntity.removeInvalidEntities();
         };
     }
 

@@ -154,6 +154,7 @@ public class InventoryClickEvent implements Listener {
         if(tridentMeta.getLore() != null)
             lore = tridentMeta.getLore();
         lore.add(ChatColor.RESET + "" + ChatColor.GRAY + "Poseidons Power");
+        lore.add(ChatColor.BLUE + "" + ChatColor.ITALIC + "Try to throw in the nether");
         tridentMeta.setLore(lore);
         finalTrident.setItemMeta(tridentMeta);
 

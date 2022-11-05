@@ -7,6 +7,8 @@ import me.karl.lochness.entities.watermonsters.WaterMonster;
 import me.karl.lochness.entities.watermonsters.kraken.LochnessKraken;
 import org.bukkit.*;
 import org.bukkit.entity.Drowned;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.EntityType;
 import org.bukkit.entity.Player;
 import org.bukkit.event.EventHandler;
 import org.bukkit.event.Listener;
@@ -15,9 +17,7 @@ import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.player.PlayerInteractEvent;
 import org.bukkit.util.RayTraceResult;
 
-import java.util.HashMap;
-import java.util.Random;
-import java.util.UUID;
+import java.util.*;
 
 public class LochnessEntityHitEvent implements Listener {
 
@@ -27,24 +27,24 @@ public class LochnessEntityHitEvent implements Listener {
 
     @EventHandler
     public void onHit(EntityDamageByEntityEvent event) {
-        if(!event.getDamager().getLocation().getWorld().getEnvironment().equals(World.Environment.THE_END))
+        if (!event.getDamager().getLocation().getWorld().getEnvironment().equals(World.Environment.THE_END))
             return;
-        if(!(event.getDamager() instanceof Player))
+        if (!(event.getDamager() instanceof Player))
             return;
-        if(!(event.getEntity() instanceof Drowned))
+        if (!(event.getEntity() instanceof Drowned))
             return;
-        hit((Player)event.getDamager());
+        hit((Player) event.getDamager(), event.getEntity());
     }
 
     @EventHandler
     public void onInteraction(PlayerInteractEvent event) {
-        if(!event.getPlayer().getLocation().getWorld().getEnvironment().equals(World.Environment.THE_END))
+        if (!event.getPlayer().getLocation().getWorld().getEnvironment().equals(World.Environment.THE_END))
             return;
         if (event.getAction().equals(Action.LEFT_CLICK_AIR) || event.getAction().equals(Action.LEFT_CLICK_BLOCK))
-            hit(event.getPlayer());
+            hit(event.getPlayer(), null);
     }
 
-    public void hit(Player player) {
+    public void hit(Player player, Entity hitEntity) {
 
         ENTITIES:
         for (LochnessEntity entity : LochnessEntity.getEntities()) {
@@ -54,18 +54,15 @@ public class LochnessEntityHitEvent implements Listener {
                     break LOCHNESS_BOSS;
                 LochnessBoss boss = (LochnessBoss) entity;
                 for (Hitbox hitbox : boss.getHitboxes()) {
+                    if (hitbox == null)
+                        continue;
                     Location hitLoc = hitbox.getIntersectionPoint(player.getEyeLocation());
                     if (hitLoc == null)
                         continue;
                     if (hitLoc.distance(player.getEyeLocation()) > PLAYER_HIT_RANGE)
                         continue;
-                    RayTraceResult rayTraceResult = player.rayTraceBlocks(6);
-                    if (rayTraceResult != null)
-                        if (rayTraceResult.getHitBlock() != null)
-                            if (rayTraceResult.getHitPosition().distance(player.getEyeLocation().toVector()) < hitLoc.distance(player.getEyeLocation()))
-                                continue;
 
-                    if(cooldown.containsKey(player.getUniqueId()))
+                    if (cooldown.containsKey(player.getUniqueId()))
                         break LOCHNESS_BOSS;
 
                     boss.damadge(PluginUtils.calculateDamadge(player.getEquipment().getItemInMainHand(), player));
@@ -80,6 +77,30 @@ public class LochnessEntityHitEvent implements Listener {
                         player.setVelocity(player.getVelocity().add(player.getLocation().subtract(hitLoc).toVector().normalize().multiply(1)));
                         hitLoc.getWorld().spawnParticle(Particle.EXPLOSION_LARGE, hitLoc, 1);
                     }
+
+                    //sound
+                    ArrayList<Entity> soundRecievers = new ArrayList<>();
+                    for (UUID entityUUID: boss.getEntityUUIDs())
+                    {
+                        soundRecievers.addAll(Objects.requireNonNull(Bukkit.getEntity(entityUUID)).getNearbyEntities(5, 5, 5));
+                    }
+                    if (boss.getHitboxes().indexOf(hitbox) > 1)
+                    {
+                        for(Entity e: soundRecievers)
+                        {
+                            if(e instanceof Player)
+                                ((Player)e).playSound(e.getLocation(), Sound.ENTITY_GUARDIAN_HURT, 1, 1);
+                        }
+                    }
+                    else
+                    {
+                        for(Entity e: soundRecievers)
+                        {
+                            if(e instanceof Player)
+                                ((Player)e).playSound(e.getLocation(), Sound.ENTITY_ELDER_GUARDIAN_HURT, 1, 1.5f);
+                        }
+                    }
+
                     break ENTITIES;
                 }
             }
@@ -90,43 +111,50 @@ public class LochnessEntityHitEvent implements Listener {
                     break WATER_MONSTER;
 
                 WaterMonster monster = (WaterMonster) entity;
-                if(!monster.isLoaded())
+                if (!monster.isLoaded())
                     break WATER_MONSTER;
 
-                if(monster.getLocation().getWorld().getEnvironment() != player.getWorld().getEnvironment())
+                if (monster.getLocation().getWorld().getEnvironment() != player.getWorld().getEnvironment())
                     break WATER_MONSTER;
 
-                if(monster.getLocation().distance(player.getLocation()) > 8)
+                if (monster.getLocation().distance(player.getLocation()) > 8)
                     break WATER_MONSTER;
 
+                Boolean hitDrowned = false;
+                if (hitEntity != null && monster.getEntityUUIDs().contains(hitEntity.getUniqueId()))
+                    hitDrowned = true;
+
+                if (monster.getHitbox() == null)
+                    break WATER_MONSTER;
                 Location hitLoc = monster.getHitbox().getIntersectionPoint(player.getEyeLocation());
-                if (hitLoc == null)
-                    break WATER_MONSTER;
-                if (hitLoc.distance(player.getEyeLocation()) > PLAYER_HIT_RANGE)
-                    break WATER_MONSTER;
-                RayTraceResult rayTraceResult = player.rayTraceBlocks(6);
-                if (rayTraceResult != null)
-                    if (rayTraceResult.getHitBlock() != null)
-                        if (rayTraceResult.getHitPosition().distance(player.getEyeLocation().toVector()) < hitLoc.distance(player.getEyeLocation()))
-                            break WATER_MONSTER;
+                if (!hitDrowned) {
+                    if (hitLoc == null)
+                        break WATER_MONSTER;
+                    if (hitLoc.distance(player.getEyeLocation()) > PLAYER_HIT_RANGE)
+                        break WATER_MONSTER;
+                }
+                else
+                {
+                    hitLoc = hitEntity.getLocation();
+                }
 
-                if(cooldown.containsKey(player.getUniqueId())) {
+                if (cooldown.containsKey(player.getUniqueId())) {
                     break WATER_MONSTER;
                 }
 
 
-                if(monster instanceof LochnessKraken) {
-                    if(player.getScoreboardTags().contains("angesaugt")) {
+                if (monster instanceof LochnessKraken) {
+                    if (player.getScoreboardTags().contains("angesaugt")) {
                         player.getWorld().playSound(player.getLocation(), Sound.BLOCK_SLIME_BLOCK_BREAK, 1, 1);
                         break WATER_MONSTER;
                     } else {
-                        ((LochnessKraken)monster).drowned.getTarget().removeScoreboardTag("angesaugt");
-                        ((LochnessKraken)monster).stopSucking();
+                        if (monster.drowned.getTarget() != null)
+                            monster.drowned.getTarget().removeScoreboardTag("angesaugt");
+                        ((LochnessKraken) monster).stopSucking();
                     }
                 }
 
                 addPlayerCooldown(player);
-                player.getWorld().playSound(player.getLocation(), Sound.ENTITY_DOLPHIN_HURT, 1, 1);
                 player.setCooldown(player.getEquipment().getItemInMainHand().getType(), COOLDOWN_TIME);
                 monster.damadge(PluginUtils.calculateDamadge(player.getEquipment().getItemInMainHand(), player));
                 monster.drowned.setVelocity(monster.drowned.getVelocity().clone().add(monster.drowned.getLocation().clone().subtract(player.getLocation()).toVector().normalize().multiply(0.2)));

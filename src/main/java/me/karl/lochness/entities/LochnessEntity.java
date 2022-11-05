@@ -16,20 +16,26 @@ import me.karl.lochness.structures.cave.CaveLogic;
 import org.bukkit.Bukkit;
 import org.bukkit.Chunk;
 import org.bukkit.World;
+import org.bukkit.entity.Entity;
+import org.bukkit.entity.LivingEntity;
 import org.bukkit.entity.Player;
 
 import java.io.*;
 import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 
 public abstract class LochnessEntity implements Serializable{
 
-    private static ArrayList<LochnessEntity> entities = new ArrayList<>();
-    private static HashMap<String, LochnessEntity> unloadedEntities = new HashMap<>();
+    private static final ArrayList<LochnessEntity> entities = new ArrayList<>();
+    private static final ConcurrentHashMap<String, LochnessEntity> unloadedEntities = new ConcurrentHashMap<>();
 
     protected int chunkX, chunkZ;
     protected int world;
 
     protected transient int taskID;
+
+    public static final String entityValidityTag = "LochnessEntityValidityTag=";
+    public static long entityValidityNum = new Date().getTime();
 
     public LochnessEntity(int world, int chunkX, int chunkZ) {
         this.world = world;
@@ -40,11 +46,7 @@ public abstract class LochnessEntity implements Serializable{
         entities.add(this);
     }
 
-    public Runnable tick() {
-        return () -> {
-
-        };
-    }
+    abstract public Runnable tick();
 
     abstract public void updateGlobalChunkPos();
 
@@ -59,6 +61,59 @@ public abstract class LochnessEntity implements Serializable{
 
     public static ArrayList<LochnessEntity> getEntities() {
         return (ArrayList<LochnessEntity>) entities.clone();
+    }
+
+    abstract protected void tagEntities(String tag, long num);
+    protected static void tagEntity(Entity entity, String validityTag, long num) {
+        if (entity == null)
+            return;
+        Iterator<String> tagIterator = entity.getScoreboardTags().iterator();
+        while (tagIterator.hasNext()) {
+            String tag = tagIterator.next();
+            if (tag.contains(validityTag))
+                tagIterator.remove();
+        }
+        entity.addScoreboardTag(validityTag + num);
+    }
+
+    abstract protected void loadEntityByUIDs();
+
+    abstract protected ArrayList<UUID> getEntityUUIDs();
+
+    public static void verifyEntities() {
+        entityValidityNum ++;
+        for (LochnessEntity entity: entities) {
+            entity.tagEntities(entityValidityTag, entityValidityNum);
+        }
+    }
+
+    public static void removeInvalidEntities() {
+        for (World world: Bukkit.getWorlds()) {
+            entityLoop:
+            for (Entity entity: world.getEntities()) {
+                for (String tag: entity.getScoreboardTags()) {
+                    if (!tag.contains(entityValidityTag))
+                        continue;
+                    ArrayList<LochnessEntity> allEntities = (ArrayList<LochnessEntity>) entities.clone();
+                    allEntities.addAll(unloadedEntities.values());
+                    if (allEntities.stream().anyMatch(entity1 -> entity1.getEntityUUIDs().contains(entity.getUniqueId())))
+                        continue entityLoop;
+                    if (entity.getScoreboardTags().contains(entityValidityTag + entityValidityNum))
+                        continue entityLoop;
+
+                    if (entity instanceof LivingEntity)
+                        ((LivingEntity) entity).setHealth(0.0);
+                    entity.remove();
+
+
+                    Boolean any = false;
+                    for (LochnessEntity entity1: allEntities) {
+                        if (entity1.getEntityUUIDs().contains(entity.getUniqueId()))
+                            any = false;
+                    }
+                }
+            }
+        }
     }
 
     protected void save(){}
@@ -185,11 +240,9 @@ public abstract class LochnessEntity implements Serializable{
     }
 
     public static void tryLoadUnloadedEntities() {
-        Iterator i = unloadedEntities.entrySet().iterator();
-        while (i.hasNext()) {
-            Map.Entry<String, LochnessEntity> entryPair = (Map.Entry<String, LochnessEntity>)i.next();
-            String filename = entryPair.getKey();
-            LochnessEntity entity = entryPair.getValue();
+        for (Iterator<String> i = unloadedEntities.keySet().iterator(); i.hasNext(); ) {
+            String filename = i.next();
+            LochnessEntity entity = unloadedEntities.get(filename);
             Chunk chunk = Bukkit.getWorlds().get(entity.world).getChunkAt(entity.chunkX, entity.chunkZ);
             if (chunk.isLoaded() && chunk.isEntitiesLoaded()) {
                 loadEntity(entity, filename);
@@ -218,17 +271,12 @@ public abstract class LochnessEntity implements Serializable{
         return true;
     }
 
-    public static void resetAllEntities() {
-        CaveLogic.clearEntities();
-        entities.clear();
-
+    public static void deleteEntityFiles() {
         File entityPath = new File("./" + Bukkit.getWorlds().get(0).getName() + "/LochnessEntities");
         if(!entityPath.exists())
             return;
         for(File file: entityPath.listFiles())
             file.delete();
-
-        CaveLogic.spawnEntities();
     }
 
 }

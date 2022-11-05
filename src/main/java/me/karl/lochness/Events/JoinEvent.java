@@ -1,6 +1,7 @@
 package me.karl.lochness.Events;
 
 import me.karl.lochness.Lochness;
+import me.karl.lochness.PluginUtils;
 import org.bukkit.Bukkit;
 import org.bukkit.ChatColor;
 import org.bukkit.entity.Player;
@@ -16,6 +17,8 @@ public class JoinEvent implements Listener {
         player.setResourcePack(Lochness.RESOURCEPACK_DOWNLOAD_LINK);
         player.sendMessage(Lochness.getPrefix() + "Use /guide to get a book full of helpful tips");
 
+
+
         if(!Lochness.isDatapackInstalled) {
             player.sendMessage(Lochness.getPrefix() + ChatColor.YELLOW + "----------  WARNING  ----------");
             player.sendMessage(ChatColor.YELLOW + "The automatic download of the required datapack didn't work. " +
@@ -26,6 +29,13 @@ public class JoinEvent implements Listener {
                     "structure generation");
             player.sendMessage("");
             player.sendMessage("Datapack Downloadlink: " + ChatColor.AQUA + Lochness.DATAPACK_DOWNLOAD_LINK);
+        } else {
+            Boolean isInstalled = PluginUtils.grantAdvancement(player, "lochness:root");
+            if (!isInstalled) {
+                player.sendMessage(Lochness.getPrefix() + ChatColor.YELLOW + "----------  WARNING  ----------");
+                player.sendMessage(ChatColor.YELLOW + "Datapack seems to be corrupted, \"lochness:root\" couldn't be granted");
+                player.sendMessage(ChatColor.YELLOW + "Try to install it manually and ensure, it is a valid uncorrupted zip file");
+            }
         }
     }
 

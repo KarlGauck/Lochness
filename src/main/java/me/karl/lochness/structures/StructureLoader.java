@@ -1,9 +1,11 @@
 package me.karl.lochness.structures;
 
 import me.karl.lochness.Lochness;
-import me.karl.lochness.structures.cave.CaveLogic;
 import me.karl.lochness.structures.islands.PortalOpenEvent;
-import org.bukkit.*;
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.Material;
+import org.bukkit.World;
 import org.bukkit.util.Vector;
 
 public class StructureLoader {

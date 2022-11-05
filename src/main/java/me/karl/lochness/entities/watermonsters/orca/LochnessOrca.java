@@ -2,21 +2,24 @@ package me.karl.lochness.entities.watermonsters.orca;
 
 import me.karl.lochness.PluginUtils;
 import me.karl.lochness.entities.Hitbox;
+import me.karl.lochness.entities.LochnessEntity;
 import me.karl.lochness.entities.watermonsters.WaterMonster;
 import me.karl.lochness.structures.cave.CaveLogic;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.attribute.Attribute;
 import org.bukkit.entity.*;
 import org.bukkit.inventory.ItemStack;
 import org.bukkit.inventory.meta.ItemMeta;
 import org.bukkit.util.Vector;
 
+import java.util.ArrayList;
 import java.util.Random;
 import java.util.UUID;
 
-public class        LochnessOrca extends WaterMonster {
+public class LochnessOrca extends WaterMonster {
 
     protected transient Dolphin dolphin;
     protected UUID dolphinUUID;
@@ -28,36 +31,33 @@ public class        LochnessOrca extends WaterMonster {
 
     private static final int ATTACK_PROPABILITY = 1000;
 
+    public static final Location barLocation = new Location(Bukkit.getWorlds().get(2), 579, 42, 281);
+
     public LochnessOrca(LochnessOrca orca) {
         super(orca);
         dolphin = (Dolphin) Bukkit.getEntity(orca.dolphinUUID);
-        armorStand = (ArmorStand) Bukkit.getEntity(orca.armorStandUUID);
-        armorStandUUID = armorStand.getUniqueId();
+        dolphinUUID = orca.dolphinUUID;
         setDolphin();
+        armorStand = (ArmorStand) Bukkit.getEntity(orca.armorStandUUID);
+        armorStandUUID = orca.armorStandUUID;
+        tagEntities(LochnessEntity.entityValidityTag, LochnessEntity.entityValidityNum);
     }
 
     public LochnessOrca(Location loc) {
         super(loc);
         dolphin = (Dolphin) loc.getWorld().spawnEntity(loc, EntityType.DOLPHIN);
+        setDolphin();
         armorStand = (ArmorStand) loc.getWorld().spawnEntity(loc, EntityType.ARMOR_STAND);
+        armorStandUUID = armorStand.getUniqueId();
         armorStand.getEquipment().setHelmet(getArmorStandStack());
         armorStand.setSmall(true);
         armorStand.setInvisible(true);
         armorStand.setInvulnerable(true);
         armorStand.setGravity(false);
         armorStand.addScoreboardTag(getName());
-        armorStandUUID = armorStand.getUniqueId();
-        setDolphin();
+        tagEntities(LochnessEntity.entityValidityTag, LochnessEntity.entityValidityNum);
     }
 
-    @Override
-    public Runnable tick() {
-        return () -> {
-            dolphin = (Dolphin) Bukkit.getEntity(dolphinUUID);
-            armorStand = (ArmorStand) Bukkit.getEntity(armorStandUUID);
-            super.tick().run();
-        };
-    }
     @Override
     protected void movementLogic() {
 
@@ -121,40 +121,86 @@ public class        LochnessOrca extends WaterMonster {
     }
 
     private void setDolphin() {
-        dolphin.setCollidable(false);
-        dolphin.setInvisible(true);
-        dolphin.setInvulnerable(true);
-        dolphin.setSilent(true);
-        dolphin.setRemoveWhenFarAway(false);
-        dolphin.addScoreboardTag(getName());
-        dolphinUUID = dolphin.getUniqueId();
+        if (dolphin != null) {
+            dolphin.setCollidable(false);
+            dolphin.setInvisible(true);
+            dolphin.setInvulnerable(true);
+            dolphin.setSilent(true);
+            dolphin.setRemoveWhenFarAway(false);
+            dolphin.addScoreboardTag(getName());
+            dolphinUUID = dolphin.getUniqueId();
+        }
     }
 
     public void damadge(double damadge) {
         super.damadge(damadge);
         isAttacking = true;
+
+        for(Entity e: drowned.getNearbyEntities(5, 5, 5)) {
+            if(e instanceof Player)
+                ((Player)e).playSound(e.getLocation(), Sound.ENTITY_SQUID_DEATH, 1, 0.5f);
+        }
     }
 
     protected void checkIfDead() {
         super.checkIfDead();
-        if(armorStand.isDead()) {
-            remove();
-        }
+        if (armorStand == null)
+            return;
     }
 
+    @Override
+    protected void tagEntities(String validityTag, long num) {
+        super.tagEntities(validityTag, num);
+        LochnessEntity.tagEntity(dolphin, validityTag, num);
+        LochnessEntity.tagEntity(armorStand, validityTag, num);
+    }
+
+    @Override
+    protected void loadEntityByUIDs() {
+        super.loadEntityByUIDs();
+        dolphin = dolphinUUID == null ? dolphin : (Dolphin) (Bukkit.getEntity(dolphinUUID) == null ? dolphin : Bukkit.getEntity(dolphinUUID));
+        armorStand = (ArmorStand) (Bukkit.getEntity(armorStandUUID) == null ? armorStand : Bukkit.getEntity(armorStandUUID));
+    }
+
+    @Override
+    public ArrayList<UUID> getEntityUUIDs() {
+        ArrayList<UUID> list = super.getEntityUUIDs();
+        list.add(armorStandUUID);
+        list.add(dolphinUUID);
+        return list;
+    }
+
+    @Override
     public void remove() {
         isAttacking = false;
-        armorStand.addScoreboardTag("dead" + getName());
-        dolphin.addScoreboardTag("dead" + getName());
-        dolphin.remove();
-        dolphin.setHealth(0);
-        armorStand.remove();
-        armorStand.setHealth(0);
+        if (armorStand != null) {
+            armorStand.addScoreboardTag("dead" + getName());
+            armorStand.setHealth(0);
+            armorStand.remove();
+        }
+        if (dolphin != null) {
+            dolphin.addScoreboardTag("dead" + getName());
+            dolphin.setHealth(0);
+            dolphin.remove();
+        }
+
         super.remove();
     }
 
+    @Override
+    public void save() {
+        super.save();
+        if (drowned != null) {
+            if (dolphin != null)
+                dolphin.teleport(drowned);
+            if (armorStand != null)
+                armorStand.teleport(drowned);
+        }
+    }
+
+    @Override
     public Location getBarLocation() {
-        return new Location(Bukkit.getWorlds().get(2), 579, 42, 281);
+        return barLocation;
     }
 
     public int getHIT_COOLDOWN() {
@@ -182,7 +228,7 @@ public class        LochnessOrca extends WaterMonster {
     }
 
     public double getGENERIC_ATTACK_DAMADGE() {
-        return 65;
+        return 90;
     }
 
     public double getMAXIMUM_HEALTH() {

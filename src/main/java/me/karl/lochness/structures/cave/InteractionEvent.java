@@ -30,11 +30,6 @@ public class InteractionEvent implements Listener {
 
     @EventHandler
     public void onInteraction(PlayerInteractAtEntityEvent event) {
-        /*
-        if(interacted) {
-            return;
-        }
-         */
 
         Entity entity = event.getRightClicked();
 
@@ -134,6 +129,10 @@ public class InteractionEvent implements Listener {
     }
 
     public static void openCage() {
+        for (Player player: Bukkit.getWorlds().get(2).getPlayers())
+        {
+            player.playSound(player.getLocation(), Sound.ENTITY_LIGHTNING_BOLT_IMPACT, 1, 1);
+        }
         doorLoc.getWorld().spawnParticle(Particle.EXPLOSION_HUGE, doorLoc, 1, 0, 0, 0, 0);
         doorLoc.clone().add(new Vector(0, 0, 1)).getBlock().setType(Material.WATER);
         doorLoc.clone().add(new Vector(0, 1, 1)).getBlock().setType(Material.WATER);

@@ -7,6 +7,7 @@ import me.karl.lochness.entities.watermonsters.WaterMonster;
 import org.bukkit.Bukkit;
 import org.bukkit.Location;
 import org.bukkit.Material;
+import org.bukkit.Sound;
 import org.bukkit.entity.Entity;
 import org.bukkit.entity.Player;
 import org.bukkit.inventory.ItemStack;
@@ -19,7 +20,8 @@ import java.util.Random;
 
 public class LochnessKraken extends WaterMonster {
 
-    public static transient Location lastSaugLoc;
+    public static Location lastSaugLoc;
+    public static final Location barLocation = new Location(Bukkit.getWorlds().get(2), 619, 54, 167);
 
     public LochnessKraken(LochnessKraken piranha) {
         super(piranha);
@@ -132,8 +134,18 @@ public class LochnessKraken extends WaterMonster {
         }
     }
 
+    @Override
+    public void damadge(double damadge) {
+        super.damadge(damadge);
+        for(Entity e: drowned.getNearbyEntities(5, 5, 5)) {
+            if(e instanceof Player)
+                ((Player)e).playSound(e.getLocation(), Sound.ENTITY_AXOLOTL_DEATH, 1, .5f);
+        }
+    }
+
+    @Override
     public Location getBarLocation() {
-        return new Location(Bukkit.getWorlds().get(2), 619, 54, 167);
+        return barLocation;
     }
 
     public int getHIT_COOLDOWN() {

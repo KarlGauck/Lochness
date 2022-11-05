@@ -1,15 +1,14 @@
 package me.karl.lochness;
 
-import me.karl.lochness.structures.cave.CaveLogic;
 import me.karl.lochness.structures.cave.InteractionEvent;
-import org.bukkit.*;
+import org.bukkit.Bukkit;
+import org.bukkit.Location;
+import org.bukkit.Material;
 import org.bukkit.entity.Player;
 
-public class SoundClass {
+import java.util.ArrayList;
 
-    public static long time = 0;
-    public static int songTime = 1;
-    public static int song = 0;
+public class SoundClass {
 
     public static String[] sounds = {
             "minecraft:music_disc.11",
@@ -30,39 +29,50 @@ public class SoundClass {
     };
 
     public static void soundLoop() {
-        if (InteractionEvent.doorLoc.getBlock().getType() == Material.IRON_BARS)
+        if (!isSoundActivated())
             return;
 
-        if(time % (songTime) == 0) {
-            playNextSong();
-            time = 0;
-        }
-
-        time ++;
-    }
-
-    public static void playNextSong() {
-
-        int index = song++;
-        if(song >= sounds.length)
-            song = 0;
-        songTime = soundTime[index];
-
-        for(Player p: Bukkit.getOnlinePlayers()) {
+        playerLoop:
+        for (Player p : Bukkit.getWorlds().get(2).getPlayers()) {
             Location loc = p.getLocation();
-
             if (loc.getBlockX() < 544 || loc.getBlockX() > 544 + (48 * 3))
-                continue;
-
+                return;
             if (loc.getBlockZ() < 144 || loc.getBlockZ() > 144 + (48 * 3))
-                continue;
+                return;
 
-            playSong(p, sounds[index]);
+            for (String s: p.getScoreboardTags())
+                if (s.contains("music=false"))
+                    continue playerLoop;
+
+            int trackTime = soundTime[getTrack(p)];
+
+            // Time < 0 lets classes like MusicCommand prime song by setting time to -1 using the primeSong() method
+            if (getTime(p) >= trackTime || getTime(p) < 0) {
+                setNextTrack(p);
+                playTrack(p, sounds[getTrack(p)]);
+            }
+
+            setTime(p, getTime(p) + 1);
         }
 
     }
 
-    public static void playSong(Player player, String song) {
+    public static void primeSong(Player p) {
+        if (!isSoundActivated())
+            return;
+        setTime(p, -1);
+    }
+
+    public static void setNextTrack(Player p) {
+        int track = getTrack(p);
+        setTrack(p, track + 1);
+        setTime(p, 0);
+        if (getTrack(p) >= sounds.length) {
+            setTrack(p, 0);
+        }
+    }
+
+    public static void playTrack(Player player, String song) {
         if(player.getScoreboardTags().contains("music=false"))
             return;
 
@@ -97,6 +107,49 @@ public class SoundClass {
             return volume;
         }
         return 1.0f;
+    }
+
+    public static int getTrack(Player p) {
+        for (String s: p.getScoreboardTags()) {
+            if (s.contains("music_track=")) {
+                return Integer.parseInt(s.replaceAll("music_track=", ""));
+            }
+        }
+        p.addScoreboardTag("music_track=0");
+        return 0;
+    }
+    public static void setTrack(Player p, int track) {
+        ArrayList<String> removalTags = new ArrayList<>();
+        for (String s : p.getScoreboardTags())
+            if (s.contains("music_track="))
+                removalTags.add(s);
+        for (String s: removalTags)
+            p.removeScoreboardTag(s);
+        p.addScoreboardTag("music_track=" + track);
+    }
+
+    public static int getTime(Player p) {
+        for (String s: p.getScoreboardTags()) {
+            if (s.contains("music_time="))
+                return Integer.parseInt(s.replaceAll("music_time=", ""));
+        }
+        p.addScoreboardTag("music_time=-1");
+        return -1;
+    }
+
+    public static void setTime(Player p, int time) {
+        ArrayList<String> removalTags = new ArrayList<>();
+        for (String s: p.getScoreboardTags()) {
+            if (s.contains("music_time="))
+                removalTags.add(s);
+        }
+        for (String s: removalTags)
+            p.removeScoreboardTag(s);
+        p.addScoreboardTag("music_time=" + time);
+    }
+
+    public static Boolean isSoundActivated() {
+        return InteractionEvent.doorLoc.getBlock().getType() != Material.IRON_BARS;
     }
 
 }

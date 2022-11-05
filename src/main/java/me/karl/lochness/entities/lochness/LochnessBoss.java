@@ -23,9 +23,7 @@ import org.bukkit.util.RayTraceResult;
 import org.bukkit.util.Vector;
 
 import java.io.Serializable;
-import java.util.ArrayList;
-import java.util.Random;
-import java.util.UUID;
+import java.util.*;
 
 public class LochnessBoss extends LochnessEntity implements Serializable {
     public static final long serialVersionUID = 1;
@@ -142,28 +140,34 @@ public class LochnessBoss extends LochnessEntity implements Serializable {
         bossBar.setProgress(1);
 
         drowned = (Drowned) Bukkit.getEntity(lochnessBoss.drownedUUID);
-        drowned.setCollidable(false);
-        drowned.setPersistent(true);
-        drownedUUID = drowned.getUniqueId();
+        if (drowned != null) {
+            drowned.setCollidable(false);
+            drowned.setRemoveWhenFarAway(false);
+        }
+        drownedUUID = lochnessBoss.drownedUUID;
 
         dolphin = (Dolphin) Bukkit.getEntity(lochnessBoss.dolphinUUID);
-        dolphin.setCollidable(false);
-        dolphinUUID = dolphin.getUniqueId();
+        if (dolphin != null) {
+            dolphin.setCollidable(false);
+        }
+        dolphinUUID = lochnessBoss.dolphinUUID;
 
         head = (ArmorStand) Bukkit.getEntity(lochnessBoss.headUUID);
-        headUUID = head.getUniqueId();
+        headUUID = lochnessBoss.headUUID;
 
         neck = (ArmorStand) Bukkit.getEntity(lochnessBoss.neckUUID);
-        neckUUID = neck.getUniqueId();
+        neckUUID = lochnessBoss.neckUUID;
 
         for (int bodyPart = 0; bodyPart < body.length; bodyPart++) {
             body[bodyPart] = (ArmorStand) Bukkit.getEntity(lochnessBoss.bodyUUID[bodyPart]);
-            bodyUUID[bodyPart] = body[bodyPart].getUniqueId();
+            bodyUUID[bodyPart] = lochnessBoss.bodyUUID[bodyPart];
         }
         for (int tailPart = 0; tailPart < tail.length; tailPart++) {
             tail[tailPart] = (ArmorStand) Bukkit.getEntity(lochnessBoss.tailUUID[tailPart]);
-            tailUUID[tailPart] = tail[tailPart].getUniqueId();
+            tailUUID[tailPart] = lochnessBoss.tailUUID[tailPart];
         }
+
+        tagEntities(LochnessEntity.entityValidityTag, LochnessEntity.entityValidityNum);
 
         visible = lochnessBoss.visible;
         health = lochnessBoss.health;
@@ -190,7 +194,7 @@ public class LochnessBoss extends LochnessEntity implements Serializable {
 
         dolphin = (Dolphin) world.spawnEntity(headLoc, EntityType.DOLPHIN);
         dolphin.setRemoveWhenFarAway(false);
-        dolphin.setPersistent(true);
+        dolphin.setRemoveWhenFarAway(false);
         dolphin.setInvulnerable(true);
         dolphin.setInvisible(true);
         dolphin.setCollidable(false);
@@ -232,6 +236,8 @@ public class LochnessBoss extends LochnessEntity implements Serializable {
             tailUUID[tailPart] = tail[tailPart].getUniqueId();
         }
 
+        tagEntities(LochnessEntity.entityValidityTag, LochnessEntity.entityValidityNum);
+
         // ------ Set Models ------
         setVisible(true);
 
@@ -239,137 +245,140 @@ public class LochnessBoss extends LochnessEntity implements Serializable {
 
     @Override
     public Runnable tick() {
-        return new Runnable() {
-            @Override
-            public void run() {
+        return () -> {
 
-                // Ensure, Entities are accessed correctly
-                drowned = (Drowned) Bukkit.getEntity(drownedUUID);
-                drowned.setCollidable(false);
-                drowned.setPersistent(true);
-                dolphin = (Dolphin) Bukkit.getEntity(dolphinUUID);
-                dolphin.setCollidable(false);
-                head = (ArmorStand) Bukkit.getEntity(headUUID);
-                neck = (ArmorStand) Bukkit.getEntity(neckUUID);
-                for (int bodyPart = 0; bodyPart < body.length; bodyPart++) {
-                    body[bodyPart] = (ArmorStand) Bukkit.getEntity(bodyUUID[bodyPart]);
-                }
-                for (int tailPart = 0; tailPart < tail.length; tailPart++) {
-                    tail[tailPart] = (ArmorStand) Bukkit.getEntity(tailUUID[tailPart]);
-                }
+            // Ensure, only valid entities are kept
+            tagEntities(LochnessEntity.entityValidityTag, LochnessEntity.entityValidityNum);
 
-                if (!drowned.getLocation().getChunk().isLoaded())
-                    return;
-                if (!drowned.getLocation().getChunk().isEntitiesLoaded())
-                    return;
+            if (drowned == null || dolphin == null || head == null || neck == null || Arrays.stream(body).anyMatch(Objects::isNull) || Arrays.stream(tail).anyMatch(Objects::isNull)) {
+                remove();
+                return;
+            }
 
-                timeLived++;
+            if (!drowned.getLocation().getChunk().isLoaded()) {
+                return;
+            }
+            if (!drowned.getLocation().getChunk().isEntitiesLoaded()) {
+                return;
+            }
 
-                // ------ if dead ------
-                checkIfDead();
+            drowned.setRemoveWhenFarAway(false);
+            dolphin.setCollidable(false);
 
-                if (timeLived % 10000 == 0) {
-                    resetDrowned(drowned.getLocation());
-                }
+            timeLived++;
 
-                // Fix movementbug
-                if(lastLoc != null) {
-                    if (!(isAttacking) && aiState == AI_STATE.ATTACK && lastLoc.toVector().distance(drowned.getLocation().toVector()) < 0.05) {
-                        falseMovements++;
-                    } else {
-                        falseMovements = 0;
-                    }
-                }
-                lastLoc = drowned.getLocation();
+            // ------ if dead ------
+            checkIfDead();
 
-                if(falseMovements > 40) {
-                    resetDrowned(drowned.getLocation());
+            if (timeLived % 10000 == 0) {
+                resetDrowned(drowned.getLocation());
+            }
+
+            // Fix movement-bug
+            if (lastLoc != null) {
+                if (!(isAttacking) && aiState == AI_STATE.ATTACK && lastLoc.toVector().distance(drowned.getLocation().toVector()) < 0.05) {
+                    falseMovements++;
+                } else {
                     falseMovements = 0;
                 }
-
-                // ------ Potion Effects and stuff ------
-
-                drowned.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, 42, 42, true, false));
-                drowned.getEquipment().setItemInMainHand(new ItemStack(Material.COMMAND_BLOCK_MINECART));
-
-                loadHitboxes();
-                calculateProjectiles();
-
-                for(Entity entity: drowned.getWorld().getEntities()) {
-                    if(entity.getScoreboardTags().contains("deadLochness"))
-                        entity.remove();
-                }
-
-                // ------ Bossbar ------
-                bossBar.setProgress(health / MAXIMUM_HEALTH);
-                for(Entity e: drowned.getNearbyEntities(60, 60, 60)) {
-                    if(e instanceof Player) {
-                        if(e.getLocation().distance(drowned.getLocation()) > 50)
-                            bossBar.removePlayer((Player) e);
-                        else
-                            bossBar.addPlayer((Player)e);
-                    }
-                }
-
-                // ------ AI ------
-                if (lastTimeSwimming > 0)
-                    lastTimeSwimming--;
-                if (drowned.isSwimming())
-                    lastTimeSwimming = 20;
-
-                if (lastTimeSwimming > 0 && InteractionEvent.doorLoc.getBlock().getType() == Material.WATER)
-                    aiState = AI_STATE.ATTACK;
-                else
-                    aiState = AI_STATE.RANDOM_MOVEMENT;
-
-                switch (aiState) {
-                    case ATTACK: {
-                        head.teleport(drowned);
-                        dolphin.teleport(head);
-                        attackLogic();
-                        effectLogic();
-                        break;
-                    }
-                    case RANDOM_MOVEMENT: {
-                        head.teleport(dolphin);
-                        drowned.teleport(head);
-                        break;
-                    }
-                }
-
-                // ------ Regeneration ------
-                health = health + REGENERATION_EFFECT;
-                if (health > MAXIMUM_HEALTH)
-                    health = MAXIMUM_HEALTH;
-
-                // ------ Snake body movement ------
-
-                try {
-                    neck.teleport(head.getLocation().add(neck.getLocation().subtract(head.getLocation()).toVector().normalize().multiply(1.5)));
-                    neck.teleport(neck.getLocation().setDirection(head.getLocation().subtract(neck.getLocation()).toVector()));
-                    neck.setHeadPose(PluginUtils.convertVectorToEulerAngle(neck.getLocation(), head.getLocation()));
-
-                    body[0].teleport(neck.getLocation().add(body[0].getLocation().subtract(neck.getLocation()).toVector().normalize().multiply(bodyPartDistance)));
-                    body[0].teleport(body[0].getLocation().setDirection(neck.getLocation().subtract(body[0].getLocation()).toVector()));
-                    body[0].setHeadPose(PluginUtils.convertVectorToEulerAngle(body[0].getLocation(), neck.getLocation()));
-
-                    for (int bodyPart = 1; bodyPart < body.length; bodyPart++) {
-                        body[bodyPart].teleport(body[bodyPart - 1].getLocation().add(body[bodyPart].getLocation().subtract(body[bodyPart - 1].getLocation()).toVector().normalize().multiply(bodyPartDistance)));
-                        body[bodyPart].teleport(body[bodyPart].getLocation().setDirection(body[bodyPart - 1].getLocation().subtract(body[bodyPart].getLocation()).toVector()));
-                        body[bodyPart].setHeadPose(PluginUtils.convertVectorToEulerAngle(body[bodyPart].getLocation(), body[bodyPart - 1].getLocation()));
-                    }
-                    tail[0].teleport(body[body.length - 1].getLocation().add(tail[0].getLocation().subtract(body[body.length - 1].getLocation()).toVector().normalize().multiply(bodyPartDistance)));
-                    tail[0].teleport(tail[0].getLocation().setDirection(body[body.length - 1].getLocation().subtract(tail[0].getLocation()).toVector()));
-                    tail[0].setHeadPose(PluginUtils.convertVectorToEulerAngle(tail[0].getLocation(), body[body.length - 1].getLocation()));
-                    for (int tailPart = 1; tailPart < tail.length; tailPart++) {
-                        tail[tailPart].teleport(tail[tailPart - 1].getLocation().add(tail[tailPart].getLocation().subtract(tail[tailPart - 1].getLocation()).toVector().normalize().multiply(bodyPartDistance)));
-                        tail[tailPart].teleport(tail[tailPart].getLocation().setDirection(tail[tailPart - 1].getLocation().subtract(tail[tailPart].getLocation()).toVector()));
-                        tail[tailPart].setHeadPose(PluginUtils.convertVectorToEulerAngle(tail[tailPart].getLocation(), tail[tailPart - 1].getLocation()));
-                    }
-                } catch (Exception e) {
-                }
-
             }
+            lastLoc = drowned.getLocation();
+
+            if (falseMovements > 40) {
+                resetDrowned(drowned.getLocation());
+                falseMovements = 0;
+            }
+
+            // ------ Sound ------
+            if (timeLived % 200 == 0)
+            {
+                if ((int)(Math.random() * 3) == 0)
+                    playSoundNearby(Sound.ENTITY_WARDEN_ROAR, 1f);
+            }
+
+
+            // ------ Potion Effects and stuff ------
+
+            drowned.addPotionEffect(new PotionEffect(PotionEffectType.WEAKNESS, 42, 42, true, false));
+            drowned.getEquipment().setItemInMainHand(new ItemStack(Material.COMMAND_BLOCK_MINECART));
+
+            loadHitboxes();
+            calculateProjectiles();
+
+            for (Entity entity : drowned.getWorld().getEntities()) {
+                if (entity.getScoreboardTags().contains("deadLochness"))
+                    entity.remove();
+            }
+
+            // ------ Bossbar ------
+            bossBar.setProgress(health / MAXIMUM_HEALTH);
+            for (Entity e : drowned.getNearbyEntities(60, 60, 60)) {
+                if (e instanceof Player) {
+                    if (e.getLocation().distance(drowned.getLocation()) > 50)
+                        bossBar.removePlayer((Player) e);
+                    else
+                        bossBar.addPlayer((Player) e);
+                }
+            }
+
+            // ------ AI ------
+            if (lastTimeSwimming > 0)
+                lastTimeSwimming--;
+            if (drowned.isSwimming())
+                lastTimeSwimming = 20;
+
+            if (lastTimeSwimming > 0 && InteractionEvent.doorLoc.getBlock().getType() == Material.WATER)
+                aiState = AI_STATE.ATTACK;
+            else
+                aiState = AI_STATE.RANDOM_MOVEMENT;
+
+            switch (aiState) {
+                case ATTACK: {
+                    head.teleport(drowned);
+                    dolphin.teleport(head);
+                    attackLogic();
+                    effectLogic();
+                    break;
+                }
+                case RANDOM_MOVEMENT: {
+                    head.teleport(dolphin);
+                    drowned.teleport(head);
+                    break;
+                }
+            }
+
+            // ------ Regeneration ------
+            health = health + REGENERATION_EFFECT;
+            if (health > MAXIMUM_HEALTH)
+                health = MAXIMUM_HEALTH;
+
+            // ------ Snake body movement ------
+
+            try {
+                neck.teleport(head.getLocation().add(neck.getLocation().subtract(head.getLocation()).toVector().normalize().multiply(1.5)));
+                neck.teleport(neck.getLocation().setDirection(head.getLocation().subtract(neck.getLocation()).toVector()));
+                neck.setHeadPose(PluginUtils.convertVectorToEulerAngle(neck.getLocation(), head.getLocation()));
+
+                body[0].teleport(neck.getLocation().add(body[0].getLocation().subtract(neck.getLocation()).toVector().normalize().multiply(bodyPartDistance)));
+                body[0].teleport(body[0].getLocation().setDirection(neck.getLocation().subtract(body[0].getLocation()).toVector()));
+                body[0].setHeadPose(PluginUtils.convertVectorToEulerAngle(body[0].getLocation(), neck.getLocation()));
+
+                for (int bodyPart = 1; bodyPart < body.length; bodyPart++) {
+                    body[bodyPart].teleport(body[bodyPart - 1].getLocation().add(body[bodyPart].getLocation().subtract(body[bodyPart - 1].getLocation()).toVector().normalize().multiply(bodyPartDistance)));
+                    body[bodyPart].teleport(body[bodyPart].getLocation().setDirection(body[bodyPart - 1].getLocation().subtract(body[bodyPart].getLocation()).toVector()));
+                    body[bodyPart].setHeadPose(PluginUtils.convertVectorToEulerAngle(body[bodyPart].getLocation(), body[bodyPart - 1].getLocation()));
+                }
+                tail[0].teleport(body[body.length - 1].getLocation().add(tail[0].getLocation().subtract(body[body.length - 1].getLocation()).toVector().normalize().multiply(bodyPartDistance)));
+                tail[0].teleport(tail[0].getLocation().setDirection(body[body.length - 1].getLocation().subtract(tail[0].getLocation()).toVector()));
+                tail[0].setHeadPose(PluginUtils.convertVectorToEulerAngle(tail[0].getLocation(), body[body.length - 1].getLocation()));
+                for (int tailPart = 1; tailPart < tail.length; tailPart++) {
+                    tail[tailPart].teleport(tail[tailPart - 1].getLocation().add(tail[tailPart].getLocation().subtract(tail[tailPart - 1].getLocation()).toVector().normalize().multiply(bodyPartDistance)));
+                    tail[tailPart].teleport(tail[tailPart].getLocation().setDirection(tail[tailPart - 1].getLocation().subtract(tail[tailPart].getLocation()).toVector()));
+                    tail[tailPart].setHeadPose(PluginUtils.convertVectorToEulerAngle(tail[tailPart].getLocation(), tail[tailPart - 1].getLocation()));
+                }
+            } catch (Exception e) {
+            }
+
         };
     }
 
@@ -388,9 +397,9 @@ public class LochnessBoss extends LochnessEntity implements Serializable {
 
         isAttacking = false;
 
-        for(Entity entity: drowned.getNearbyEntities(20, 20, 20)) {
-            if(entity instanceof Player)
-                ((Player)entity).removePotionEffect(PotionEffectType.DOLPHINS_GRACE);
+        for (Entity entity : drowned.getNearbyEntities(20, 20, 20)) {
+            if (entity instanceof Player)
+                ((Player) entity).removePotionEffect(PotionEffectType.DOLPHINS_GRACE);
         }
 
         MEELE:
@@ -412,6 +421,9 @@ public class LochnessBoss extends LochnessEntity implements Serializable {
 
             if (new Random().nextInt(20) == 0) {
                 PluginUtils.damadgePlayer(player, 50 * STRENGTH_EFFECT_FACTOR, "LOCHNESS_2");
+
+                //sound
+                playSoundNearby(Sound.ENTITY_DOLPHIN_ATTACK, 1f);
             }
         }
 
@@ -429,6 +441,12 @@ public class LochnessBoss extends LochnessEntity implements Serializable {
                 fireLocationTime.add(0);
                 drowned.setVelocity(drowned.getEyeLocation().getDirection().normalize().multiply(0.01));
                 isAttacking = true;
+            }
+
+            // sound
+            if (timeSinceLastFireAttack == FIRE_ATTACK_FEEDBACK)
+            {
+                playSoundNearby(Sound.ENTITY_WARDEN_ROAR, 1f);
             }
 
             if (timeSinceLastFireAttack < FIRE_ATTACK_COOLDOWN || timeSinceLastAttack < ATTACK_COOLDOWN)
@@ -498,6 +516,12 @@ public class LochnessBoss extends LochnessEntity implements Serializable {
                 }
             }
 
+            // sound
+            if (timeSinceLastKnockbackAttack == KNOCKBACK_ATTACK_FEEDBACK)
+            {
+                playSoundNearby(Sound.ENTITY_SQUID_SQUIRT, 1f);
+            }
+
             if (timeSinceLastKnockbackAttack < KNOCKBACK_ATTACK_COOLDOWN || timeSinceLastAttack < ATTACK_COOLDOWN)
                 break KNOCKBACK_ATTACK;
 
@@ -526,7 +550,7 @@ public class LochnessBoss extends LochnessEntity implements Serializable {
 
         CATCH_ATTACK:
         {
-            if(phase < 4)
+            if (phase < 4)
                 break CATCH_ATTACK;
 
             timeSinceLastCatchAttack++;
@@ -547,6 +571,18 @@ public class LochnessBoss extends LochnessEntity implements Serializable {
                 isAttacking = true;
                 drowned.getTarget().teleport(drowned.getLocation().clone().add(drowned.getLocation().getDirection().multiply(0.4)).setDirection(drowned.getTarget().getLocation().getDirection()));
                 PluginUtils.damadgePlayer((Player) drowned.getTarget(), CATCH_ATTACK_DAMADGE * STRENGTH_EFFECT_FACTOR, "LOCHNESS_5");
+
+                // sound while eating
+                if (timeSinceLastCatchAttack % 5 == 0)
+                {
+                    playSoundNearby(Sound.ENTITY_GENERIC_EAT, 1f);
+                }
+            }
+
+            // sound at start
+            if (timeSinceLastCatchAttack == CATCH_ATTACK_FEEDBACK)
+            {
+                playSoundNearby(Sound.ENTITY_PHANTOM_BITE, 1f);
             }
 
             if (timeSinceLastCatchAttack < CATCH_ATTACK_COOLDOWN || timeSinceLastAttack < ATTACK_COOLDOWN)
@@ -555,12 +591,13 @@ public class LochnessBoss extends LochnessEntity implements Serializable {
             if (new Random().nextInt(CATCH_ATTACK_PROPABILITY) != 0)
                 break CATCH_ATTACK;
 
-            if(drowned.getLocation().distance(drowned.getTarget().getLocation()) > 6) {
+            if (drowned.getLocation().distance(drowned.getTarget().getLocation()) > 6) {
                 break CATCH_ATTACK;
             }
 
             timeSinceLastCatchAttack = 0;
             timeSinceLastAttack = 0;
+            setVisible(true);
         }
 
         FREEZE_ATTACK:
@@ -589,6 +626,14 @@ public class LochnessBoss extends LochnessEntity implements Serializable {
                     }
                 }, FREEZE_ATTACK_DURATION);
 
+                // sound when freezing
+                playSoundNearby(Sound.ENTITY_GLOW_SQUID_SQUIRT, 1f);
+                for (Entity e: player.getNearbyEntities(5, 5, 5))
+                {
+                    if (e instanceof Player)
+                        ((Player) e).playSound(e.getLocation(), Sound.ENTITY_GLOW_SQUID_SQUIRT, 1, 1);
+                }
+
             } else if (timeSinceLastFreezeAttack < FREEZE_ATTACK_FEEDBACK + FREEZE_ATTACK_DURATION) {
                 //during attack
             } else if (timeSinceLastFreezeAttack == FREEZE_ATTACK_FEEDBACK + FREEZE_ATTACK_DURATION) {
@@ -608,7 +653,7 @@ public class LochnessBoss extends LochnessEntity implements Serializable {
         POISON_ATTACK:
         {
 
-            if(phase < 2)
+            if (phase < 2)
                 break POISON_ATTACK;
 
             timeSinceLastPoisonAttack++;
@@ -628,21 +673,27 @@ public class LochnessBoss extends LochnessEntity implements Serializable {
                 displayParticles(Particle.SNEEZE, 10, 4, 4, 4, 0, null);
 
                 // give poison effect
-                for(Player p: drowned.getWorld().getPlayers()) {
-                    for(ArmorStand a: tail) {
-                        if(p.getLocation().toVector().distance(a.getLocation().toVector()) < 4)
+                for (Player p : drowned.getWorld().getPlayers()) {
+                    for (ArmorStand a : tail) {
+                        if (p.getLocation().toVector().distance(a.getLocation().toVector()) < 4)
                             p.addPotionEffect(new PotionEffect(PotionEffectType.POISON, 800, 5, true, true));
                     }
-                    for(ArmorStand a: body) {
-                        if(p.getLocation().toVector().distance(a.getLocation().toVector()) < 4)
+                    for (ArmorStand a : body) {
+                        if (p.getLocation().toVector().distance(a.getLocation().toVector()) < 4)
                             p.addPotionEffect(new PotionEffect(PotionEffectType.POISON, 800, 5, true, true));
                     }
-                    if(p.getLocation().toVector().distance(head.getLocation().toVector()) < 4)
+                    if (p.getLocation().toVector().distance(head.getLocation().toVector()) < 4)
                         p.addPotionEffect(new PotionEffect(PotionEffectType.POISON, 800, 5, true, true));
-                    if(p.getLocation().toVector().distance(neck.getLocation().toVector()) < 4)
+                    if (p.getLocation().toVector().distance(neck.getLocation().toVector()) < 4)
                         p.addPotionEffect(new PotionEffect(PotionEffectType.POISON, 800, 5, true, true));
                 }
 
+            }
+
+            // sound
+            if (timeSinceLastPoisonAttack == POISON_ATTACK_FEEDBACK)
+            {
+                playSoundNearby(Sound.ENTITY_WARDEN_ATTACK_IMPACT, .5f);
             }
 
             if (timeSinceLastPoisonAttack < POISON_ATTACK_COOLDOWN || timeSinceLastAttack < ATTACK_COOLDOWN)
@@ -663,8 +714,9 @@ public class LochnessBoss extends LochnessEntity implements Serializable {
         if (health < (MAXIMUM_HEALTH / 4) * 3) {
             drowned.getAttribute(Attribute.GENERIC_MOVEMENT_SPEED).setBaseValue(0.35);
 
-            BLINDNESS:{
-                if(new Random().nextInt(BLINDNESS_PROPABILITY) == 0)
+            BLINDNESS:
+            {
+                if (new Random().nextInt(BLINDNESS_PROPABILITY) == 0)
                     drowned.getWorld().getPlayers().get(new Random().nextInt(drowned.getWorld().getPlayers().size())).addPotionEffect
                             (new PotionEffect(PotionEffectType.BLINDNESS, BLINDNESS_DURATION, 10, false, false));
             }
@@ -716,31 +768,45 @@ public class LochnessBoss extends LochnessEntity implements Serializable {
                     break INVIS_EFFECT;
 
                 timeSinceLastInvisEffect = 0;
+                //sound
+                playSoundNearby(Sound.ENTITY_ILLUSIONER_CAST_SPELL, 1f);
             }
 
         if (health < (MAXIMUM_HEALTH / 4)) {
-            if(phase != 4) {
+            if (phase != 4) {
                 phase = 4;
                 displayParticles(Particle.REDSTONE, 100, 1, 1, 1, 0, new Particle.DustOptions(Color.RED, 1));
             }
             bossBar.setColor(BarColor.RED);
             bossBar.setTitle("Lochness    " + ChatColor.DARK_RED + "+ Catch Attack");
-        }
-        else if (health < (MAXIMUM_HEALTH / 4) * 2) {
-            if(phase != 3) {
+        } else if (health < (MAXIMUM_HEALTH / 4) * 2) {
+            if (phase != 3) {
                 phase = 3;
                 displayParticles(Particle.REDSTONE, 100, 1, 1, 1, 0, new Particle.DustOptions(Color.PURPLE, 1));
             }
             bossBar.setColor(BarColor.PURPLE);
             bossBar.setTitle("Lochness    " + ChatColor.DARK_PURPLE + "+ Invisible");
-        }
-        else if (health < (MAXIMUM_HEALTH / 4) * 3) {
-            if(phase != 2) {
+        } else if (health < (MAXIMUM_HEALTH / 4) * 3) {
+            if (phase != 2) {
                 phase = 2;
                 displayParticles(Particle.REDSTONE, 100, 1, 1, 1, 0, new Particle.DustOptions(Color.BLUE, 1));
             }
             bossBar.setColor(BarColor.BLUE);
             bossBar.setTitle("Lochness    " + ChatColor.BLUE + "+ Effects");
+        }
+    }
+
+    private void playSoundNearby(Sound sound, Float pitch) {
+        ArrayList<Entity> soundRecievers = new ArrayList<>();
+        for (UUID entityUUID: getEntityUUIDs())
+        {
+            soundRecievers.addAll(Objects.requireNonNull(Bukkit.getEntity(entityUUID)).getNearbyEntities(5, 5, 5));
+        }
+
+        for(Entity e: soundRecievers)
+        {
+            if(e instanceof Player)
+                ((Player)e).playSound(e.getLocation(), sound, 1, pitch);
         }
     }
 
@@ -777,9 +843,9 @@ public class LochnessBoss extends LochnessEntity implements Serializable {
     }
 
     private void displayParticles(Particle particle, int count, double offsetX, double offsetY, double offsetZ, double speed, Particle.DustOptions dustOptions) {
-        if(particle == Particle.REDSTONE) {
+        if (particle == Particle.REDSTONE) {
             neck.getWorld().spawnParticle(particle, neck.getLocation(), count, offsetX, offsetY, offsetZ, speed, dustOptions);
-            head.getWorld().spawnParticle(particle, head.getLocation(), count, offsetX, offsetY, offsetZ, speed,  dustOptions);
+            head.getWorld().spawnParticle(particle, head.getLocation(), count, offsetX, offsetY, offsetZ, speed, dustOptions);
             for (ArmorStand armorStand : body)
                 armorStand.getWorld().spawnParticle(particle, armorStand.getLocation(), count, offsetX, offsetY, offsetZ, speed, dustOptions);
             for (ArmorStand armorStand : tail)
@@ -840,54 +906,54 @@ public class LochnessBoss extends LochnessEntity implements Serializable {
     private void setHead() {
         ItemStack stack = new ItemStack(Material.FISHING_ROD);
         ItemMeta meta = stack.getItemMeta();
-        if(timeSinceLastKnockbackAttack < KNOCKBACK_ATTACK_FEEDBACK + KNOCKBACK_ATTACK_DURATION && timeSinceLastKnockbackAttack > KNOCKBACK_ATTACK_FEEDBACK)
+        if (timeSinceLastKnockbackAttack < KNOCKBACK_ATTACK_FEEDBACK + KNOCKBACK_ATTACK_DURATION && timeSinceLastKnockbackAttack > KNOCKBACK_ATTACK_FEEDBACK)
             meta.setCustomModelData(6);
-        else if(timeSinceLastFreezeAttack < FREEZE_ATTACK_FEEDBACK + 80 && timeSinceLastFreezeAttack > FREEZE_ATTACK_FEEDBACK)
+        else if (timeSinceLastFreezeAttack < FREEZE_ATTACK_FEEDBACK + 80 && timeSinceLastFreezeAttack > FREEZE_ATTACK_FEEDBACK)
             meta.setCustomModelData(7);
-        else if(timeSinceLastFireAttack < FIRE_ATTACK_FEEDBACK + FIRE_ATTACK_DURATION && timeSinceLastFireAttack > FIRE_ATTACK_FEEDBACK)
+        else if (timeSinceLastFireAttack < FIRE_ATTACK_FEEDBACK + FIRE_ATTACK_DURATION && timeSinceLastFireAttack > FIRE_ATTACK_FEEDBACK)
             meta.setCustomModelData(8);
         else
             meta.setCustomModelData(1);
         stack.setItemMeta(meta);
-        if(visible)
+        if (visible)
             drowned.getEquipment().setHelmet(stack);
     }
 
     public static void resetEffectValues() {
-        if(BlockBreakEvent.defense_3_broken) {
+        if (BlockBreakEvent.defense_3_broken) {
             DEFENSE_EFFECT_FACTOR = 1;
-        } else if(BlockBreakEvent.defense_2_broken) {
+        } else if (BlockBreakEvent.defense_2_broken) {
             DEFENSE_EFFECT_FACTOR = BlockBreakEvent.DEFENSE_FACTOR_3;
-        } else if(BlockBreakEvent.defense_1_broken) {
+        } else if (BlockBreakEvent.defense_1_broken) {
             DEFENSE_EFFECT_FACTOR = BlockBreakEvent.DEFENSE_FACTOR_2;
-        } else{
+        } else {
             DEFENSE_EFFECT_FACTOR = BlockBreakEvent.DEFENSE_FACTOR_1;
         }
 
-        if(BlockBreakEvent.strength_3_broken) {
+        if (BlockBreakEvent.strength_3_broken) {
             STRENGTH_EFFECT_FACTOR = 1;
-        } else if(BlockBreakEvent.strength_2_broken) {
+        } else if (BlockBreakEvent.strength_2_broken) {
             STRENGTH_EFFECT_FACTOR = BlockBreakEvent.STRENGTH_FACTOR_3;
-        } else if(BlockBreakEvent.strength_1_broken) {
+        } else if (BlockBreakEvent.strength_1_broken) {
             STRENGTH_EFFECT_FACTOR = BlockBreakEvent.STRENGTH_FACTOR_2;
-        } else{
+        } else {
             STRENGTH_EFFECT_FACTOR = BlockBreakEvent.STRENGTH_FACTOR_1;
         }
 
-        if(BlockBreakEvent.regeneration_3_broken) {
+        if (BlockBreakEvent.regeneration_3_broken) {
             REGENERATION_EFFECT = 0;
-        } else if(BlockBreakEvent.regeneration_2_broken) {
+        } else if (BlockBreakEvent.regeneration_2_broken) {
             REGENERATION_EFFECT = BlockBreakEvent.REGENERATION_3;
-        } else if(BlockBreakEvent.regeneration_1_broken) {
+        } else if (BlockBreakEvent.regeneration_1_broken) {
             REGENERATION_EFFECT = BlockBreakEvent.REGENERATION_2;
-        } else{
+        } else {
             REGENERATION_EFFECT = BlockBreakEvent.REGENERATION_1;
         }
     }
 
     private void resetDrowned(Location loc) {
 
-        if(drowned != null) {
+        if (drowned != null) {
             drowned.remove();
             drowned.setHealth(0);
             drowned.addScoreboardTag("deadLochness");
@@ -897,7 +963,6 @@ public class LochnessBoss extends LochnessEntity implements Serializable {
         drowned.setInvisible(true);
         drowned.addPotionEffect(new PotionEffect(PotionEffectType.INVISIBILITY, 42, 1, false, false));
         drowned.setRemoveWhenFarAway(false);
-        drowned.setPersistent(true);
         drowned.leaveVehicle();
         drowned.setInvulnerable(true);
         drowned.setSilent(true);
@@ -930,11 +995,54 @@ public class LochnessBoss extends LochnessEntity implements Serializable {
             if (tail[tailPart].isDead())
                 tailDead = true;
 
-        if (drowned.isDead() || dolphin.isDead() || neck.isDead() || head.isDead() || tailDead || bodyDead) {
+        if (drowned.getHealth() == 0.0 || dolphin.getHealth() == 0.0 || neck.isDead() || head.isDead() || tailDead || bodyDead) {
             remove();
         }
     }
 
+    @Override
+    protected void tagEntities(String validityTag, long num) {
+        loadEntityByUIDs();
+        LochnessEntity.tagEntity(drowned, validityTag, num);
+        LochnessEntity.tagEntity(dolphin, validityTag, num);
+        LochnessEntity.tagEntity(head, validityTag, num);
+        LochnessEntity.tagEntity(neck, validityTag, num);
+
+        for (int bodyPart = 0; bodyPart < body.length; bodyPart++)
+            LochnessEntity.tagEntity(body[bodyPart], validityTag, num);
+        for (int tailPart = 0; tailPart < tail.length; tailPart++)
+            LochnessEntity.tagEntity(tail[tailPart], validityTag, num);
+    }
+
+    @Override
+    protected void loadEntityByUIDs() {
+        drowned = drownedUUID == null ? drowned : (Drowned) (Bukkit.getEntity(drownedUUID) == null ? drowned: Bukkit.getEntity(drownedUUID));
+        dolphin = dolphinUUID == null ? dolphin: (Dolphin) (Bukkit.getEntity(dolphinUUID) == null ? dolphin: Bukkit.getEntity(dolphinUUID));
+        head = headUUID == null ? head : (ArmorStand) (Bukkit.getEntity(headUUID) == null ? head: Bukkit.getEntity(headUUID));
+        neck = neckUUID == null ? neck : (ArmorStand) (Bukkit.getEntity(neckUUID) == null ? neck: Bukkit.getEntity(neckUUID));
+        for (int bodyPart = 0; bodyPart < body.length; bodyPart++) {
+            body[bodyPart] = bodyUUID[bodyPart] == null ? body[bodyPart] : (ArmorStand) (Bukkit.getEntity(bodyUUID[bodyPart]) == null ? body[bodyPart] : Bukkit.getEntity(bodyUUID[bodyPart]));
+        }
+        for (int tailPart = 0; tailPart < tail.length; tailPart++) {
+            tail[tailPart] = tailUUID[tailPart] == null ? tail[tailPart] : (ArmorStand) (Bukkit.getEntity(tailUUID[tailPart]) == null ? tail[tailPart] : Bukkit.getEntity(tailUUID[tailPart]));
+        }
+    }
+
+    @Override
+    public ArrayList<UUID> getEntityUUIDs() {
+        ArrayList<UUID> list = new ArrayList<>();
+        list.add(drownedUUID);
+        list.add(dolphinUUID);
+        list.add(headUUID);
+        list.add(neckUUID);
+        for (UUID bodyUUID: bodyUUID)
+            list.add(bodyUUID);
+        for (UUID tailUUID: tailUUID)
+            list.add(tailUUID);
+        return list;
+    }
+
+    @Override
     public void remove() {
         drowned.remove();
         dolphin.remove();
@@ -951,25 +1059,25 @@ public class LochnessBoss extends LochnessEntity implements Serializable {
 
     public void calculateProjectiles() {
         ENTITY:
-        for(Entity entity: drowned.getWorld().getEntities()) {
+        for (Entity entity : drowned.getWorld().getEntities()) {
 
-            if(!(entity instanceof Trident))
+            if (!(entity instanceof Trident))
                 continue;
 
-            if(entity.getScoreboardTags().contains("lochnessHitProjectile"))
+            if (entity.getScoreboardTags().contains("lochnessHitProjectile"))
                 continue;
 
             entity.addScoreboardTag("lochnessHitProjectile");
 
-            for(Hitbox hitbox: getHitboxes()) {
+            for (Hitbox hitbox : getHitboxes()) {
                 Location loc = entity.getLocation().clone();
                 loc.setDirection(loc.getDirection().multiply(-1));
                 Location hitLoc = hitbox.getIntersectionPoint(loc);
-                if(hitLoc == null)
+                if (hitLoc == null)
                     continue;
-                if(hitLoc.distance(loc) < 1) {
-                    damadge(((Trident)entity).getDamage());
-                    for(Player player: drowned.getWorld().getPlayers()) {
+                if (hitLoc.distance(loc) < 1) {
+                    damadge(((Trident) entity).getDamage());
+                    for (Player player : drowned.getWorld().getPlayers()) {
                         player.setCooldown(Material.TRIDENT, 500);
                     }
                     continue ENTITY;
@@ -1005,7 +1113,7 @@ public class LochnessBoss extends LochnessEntity implements Serializable {
             head.getEquipment().setHelmet(stack);
             stop();
 
-            for(Player p: Bukkit.getOnlinePlayers()) {
+            for (Player p : Bukkit.getOnlinePlayers()) {
                 PluginUtils.grantAdvancement(p, "lochness:lochness_and_then");
             }
             Bukkit.getScheduler().runTaskLater(Lochness.getPlugin(), () -> {
@@ -1018,19 +1126,31 @@ public class LochnessBoss extends LochnessEntity implements Serializable {
 
     @Override
     protected void save() {
-        bossBar.setVisible(false);
-        bossBar.removeAll();
-        dolphin.teleport(drowned);
-        head.teleport(drowned);
-        neck.teleport(drowned);
-        for (ArmorStand bodyArmorStand : body)
-            bodyArmorStand.teleport(drowned);
-        for (ArmorStand tailArmorStand : tail)
-            tailArmorStand.teleport(drowned);
+        if (bossBar != null) {
+            bossBar.setVisible(false);
+            bossBar.removeAll();
+        }
 
-        world = Bukkit.getWorlds().indexOf(drowned.getWorld());
-        chunkX = drowned.getLocation().getChunk().getX();
-        chunkZ = drowned.getLocation().getChunk().getZ();
+        if (drowned != null) {
+            if (dolphin != null)
+                dolphin.teleport(drowned);
+            if (head != null)
+                head.teleport(drowned);
+            if (neck != null)
+                neck.teleport(drowned);
+            for (ArmorStand bodyArmorStand : body) {
+                if (bodyArmorStand != null)
+                    bodyArmorStand.teleport(drowned);
+            }
+            for (ArmorStand tailArmorStand : tail) {
+                if (tailArmorStand != null)
+                    tailArmorStand.teleport(drowned);
+            }
+
+            world = Bukkit.getWorlds().indexOf(drowned.getWorld());
+            chunkX = drowned.getLocation().getChunk().getX();
+            chunkZ = drowned.getLocation().getChunk().getZ();
+        }
     }
 
     private enum AI_STATE implements Serializable {

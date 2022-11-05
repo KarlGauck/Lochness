@@ -16,6 +16,8 @@ import java.util.Random;
 
 public class LochnessTurtle extends WaterMonster {
 
+    public static final Location barLocation = new Location(Bukkit.getWorlds().get(2), 629, 51, 150);
+
     public LochnessTurtle(LochnessTurtle turtle) {
         super(turtle);
     }
@@ -53,6 +55,7 @@ public class LochnessTurtle extends WaterMonster {
         }
     }
 
+    @Override
     public void damadge(double damadge) {
         if(timeSinceLastSpecialAttack < SPECIAL_ATTACK_DURATION) {
             for(Entity e: drowned.getNearbyEntities(5, 5, 5)) {
@@ -70,8 +73,9 @@ public class LochnessTurtle extends WaterMonster {
         }
     }
 
+    @Override
     public Location getBarLocation() {
-        return new Location(Bukkit.getWorlds().get(2), 629, 51, 150);
+        return barLocation;
     }
 
     public int getHIT_COOLDOWN() {
@@ -95,11 +99,11 @@ public class LochnessTurtle extends WaterMonster {
     }
 
     public double getGENERIC_MOVEMENT_SPEED() {
-        return 0.2;
+        return 0.4;
     }
 
     public double getGENERIC_ATTACK_DAMADGE() {
-        return 15;
+        return 90;
     }
 
     public double getMAXIMUM_HEALTH() {

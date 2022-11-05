@@ -11,6 +11,7 @@ import org.bukkit.event.world.ChunkLoadEvent;
 
 import java.util.ArrayList;
 import java.util.Arrays;
+import java.util.Iterator;
 import java.util.Random;
 
 public class CageLoadEvent implements Listener {
@@ -34,17 +35,18 @@ public class CageLoadEvent implements Listener {
 
         // ------------------------------------------- GENERATE LOOT TABLES FOR CHESTS ----------------------------------------------------------
 
-        for (int i = chestLoc.size() - 1; i >= 0; i--) {
-
-            if (!chestLoc.get(i).getChunk().isLoaded())
+        Iterator<Location> chestLocIterator = chestLoc.iterator();
+        while (chestLocIterator.hasNext()) {
+            Location iteratorLoc = chestLocIterator.next();
+            if (!iteratorLoc.getChunk().isLoaded())
                 continue;
 
-            Location loc = chestLoc.get(i).clone();
+            Location loc = iteratorLoc.clone();
 
             Bukkit.dispatchCommand(Bukkit.getConsoleSender(), "execute in minecraft:the_nether run setblock " + loc.getBlockX() + " " + loc.getBlockY() +
                     " " + loc.getBlockZ() + " chest{LootTable:\"lochness:chests/cage_kitchen\"}");
 
-            chestLoc.remove(i);
+            chestLocIterator.remove();
         }
 
         // ------------------------------------------------ GENERATE STRUCTURES ----------------------------------------------------------------

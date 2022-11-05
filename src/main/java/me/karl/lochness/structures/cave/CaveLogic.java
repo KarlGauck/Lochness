@@ -96,62 +96,62 @@ public class CaveLogic {
         isResetingCave = true;
         StructureLoader.generateCave();
         Bukkit.getScheduler().runTaskLater(Lochness.getPlugin(), () -> {
-            if(generated.exists()) {
+            if (generated.exists()) {
                 StructureLoader.generateIslands();
 
                 // Delete all ItemFrames with keys
-                for(Entity e: Bukkit.getWorlds().get(2).getEntities()) {
-                    if(e.getType() != EntityType.ITEM_FRAME)
+                for (Entity e : Bukkit.getWorlds().get(2).getEntities()) {
+                    if (e.getType() != EntityType.ITEM_FRAME)
                         continue;
 
-                    ItemStack stack = ((ItemFrame)e).getItem();
-                    if(stack == null)
+                    ItemStack stack = ((ItemFrame) e).getItem();
+                    if (stack == null)
                         continue;
 
-                    if(stack.getType() != Material.IRON_NUGGET)
+                    if (stack.getType() != Material.IRON_NUGGET)
                         continue;
-                    if(stack.hasItemMeta() && stack.getItemMeta().hasCustomModelData()  && stack.getItemMeta().getCustomModelData() != 0) {
+                    if (stack.hasItemMeta() && stack.getItemMeta().hasCustomModelData() && stack.getItemMeta().getCustomModelData() != 0) {
                         e.remove();
                     }
                 }
 
                 // Delete all items with keys
-                for(Entity e: Bukkit.getWorlds().get(2).getEntities()) {
-                    if(e.getType() != EntityType.DROPPED_ITEM)
+                for (Entity e : Bukkit.getWorlds().get(2).getEntities()) {
+                    if (e.getType() != EntityType.DROPPED_ITEM)
                         continue;
 
-                    ItemStack stack = ((Item)e).getItemStack();
-                    if(stack.getType() != Material.IRON_NUGGET)
+                    ItemStack stack = ((Item) e).getItemStack();
+                    if (stack.getType() != Material.IRON_NUGGET)
                         continue;
-                    if(stack.hasItemMeta() && stack.getItemMeta().hasCustomModelData()  && stack.getItemMeta().getCustomModelData() != 0) {
+                    if (stack.hasItemMeta() && stack.getItemMeta().hasCustomModelData() && stack.getItemMeta().getCustomModelData() != 0) {
                         e.remove();
                     }
                 }
 
                 // remove all keys out of player inventories
-                for(Player p: Bukkit.getWorlds().get(2).getPlayers()) {
+                for (Player p : Bukkit.getWorlds().get(2).getPlayers()) {
                     Inventory i = p.getInventory();
-                    for(int ind = i.getContents().length-1; ind >= 0; ind--) {
+                    for (int ind = i.getContents().length - 1; ind >= 0; ind--) {
                         ItemStack s = i.getContents()[ind];
-                        if(s == null)
+                        if (s == null)
                             continue;
-                        if(s.getType() != Material.IRON_NUGGET)
+                        if (s.getType() != Material.IRON_NUGGET)
                             continue;
-                        if(s.hasItemMeta() && s.getItemMeta().hasCustomModelData() && s.getItemMeta().getCustomModelData() != 0) {
+                        if (s.hasItemMeta() && s.getItemMeta().hasCustomModelData() && s.getItemMeta().getCustomModelData() != 0) {
                             i.remove(s);
                         }
                     }
                 }
 
-                for(Player p: Bukkit.getWorlds().get(2).getPlayers()) {
+                for (Player p : Bukkit.getWorlds().get(2).getPlayers()) {
                     Location loc = p.getLocation();
-                    if(!loc.getWorld().getEnvironment().equals(World.Environment.THE_END))
+                    if (!loc.getWorld().getEnvironment().equals(World.Environment.THE_END))
                         continue;
 
-                    if(loc.getBlockX() < 544 || loc.getBlockX() > 544 + (48 * 3))
+                    if (loc.getBlockX() < 544 || loc.getBlockX() > 544 + (48 * 3))
                         continue;
 
-                    if(loc.getBlockZ() < 144 || loc.getBlockZ() > 144 + (48 * 3))
+                    if (loc.getBlockZ() < 144 || loc.getBlockZ() > 144 + (48 * 3))
                         continue;
 
                     p.teleport(Lochness.getIslandLoc().add(new Vector(0, 67, 0)));
@@ -162,7 +162,7 @@ public class CaveLogic {
             LochnessBoss.resetEffectValues();
             InteractionEvent.interacted = false;
             isResetingCave = false;
-        },2);
+        }, 2);
     }
 
     public static void spawnEntities() {
@@ -215,6 +215,66 @@ public class CaveLogic {
         }
     }
 
+    // Only spawn entities, that are still not beaten (looking at their cage)
+    public static void spawnUnbeatenEntities() {
+// --- Spawn LochnessBoss ---
+        new LochnessBoss(lochnessSpawnLocation);
+
+        // --- Spawn Kraken ---
+        if (LochnessKraken.barLocation.getBlock().getType() == Material.IRON_BARS)
+            for (int i = 0; i < OCTOPUS_COUNT; i++) {
+                new LochnessKraken(regeneration1);
+            }
+
+        // --- Spawn Turtle ---
+        if (LochnessTurtle.barLocation.getBlock().getType() == Material.IRON_BARS)
+            for (int i = 0; i < TURTLE_COUNT; i++) {
+                new LochnessTurtle(defense3);
+            }
+
+        // --- Spawn Narwhal ---
+        if (LochnessNarwal.barLocation.getBlock().getType() == Material.IRON_BARS)
+            for (int i = 0; i < NARWAL_COUNT; i++) {
+                new LochnessNarwal(regeneration3);
+            }
+
+        // --- Spawn Rays ---
+        if (LochnessRochen.barLocation.getBlock().getType() == Material.IRON_BARS)
+            for (int i = 0; i < RAY_COUNT; i++) {
+                new LochnessRochen(regeneration2);
+            }
+
+        // --- Spawn Piranhas ---
+        if (LochnessPiranha.barLocation.getBlock().getType() == Material.IRON_BARS)
+            for (int i = 0; i < PIRANHA_COUNT; i++) {
+                new LochnessPiranha(strength1);
+            }
+
+        // --- Spawn Krabbe ---
+        if (LochnessKrabbe.barLocation.getBlock().getType() == Material.IRON_BARS)
+            for (int i = 0; i < KRABBE_COUNT; i++) {
+                new LochnessKrabbe(defense1);
+            }
+
+        // --- Spawn Hammerhai ---
+        if (LochnessHammerhai.barLocation.getBlock().getType() == Material.IRON_BARS)
+            for (int i = 0; i < HAMMERHAI_COUNT; i++) {
+                new LochnessHammerhai(strength2);
+            }
+
+        // --- Spawn Orca ---
+        if (LochnessOrca.barLocation.getBlock().getType() == Material.IRON_BARS)
+            for (int i = 0; i < ORCA_COUNT; i++) {
+                new LochnessOrca(defense2);
+            }
+
+        // --- Spawn Hai ---
+        if (LochnessHai.barLocation.getBlock().getType() == Material.IRON_BARS)
+            for (int i = 0; i < HAI_COUNT; i++) {
+                new LochnessHai(strength3);
+            }
+    }
+
     public static void clearEntities() {
         for (LochnessEntity e : LochnessEntity.getEntities()) {
             if (e instanceof WaterMonster)
@@ -242,33 +302,33 @@ public class CaveLogic {
     }
 
     public static void resetDisplay() {
-        if(BlockBreakEvent.regeneration_1_broken) {
+        if (BlockBreakEvent.regeneration_1_broken) {
             regeneration1Display.getBlock().setType(Material.LIME_CONCRETE);
         }
-        if(BlockBreakEvent.regeneration_2_broken) {
+        if (BlockBreakEvent.regeneration_2_broken) {
             regeneration2Display.getBlock().setType(Material.LIME_CONCRETE);
         }
-        if(BlockBreakEvent.regeneration_3_broken) {
+        if (BlockBreakEvent.regeneration_3_broken) {
             regeneration3Display.getBlock().setType(Material.LIME_CONCRETE);
         }
 
-        if(BlockBreakEvent.defense_1_broken) {
+        if (BlockBreakEvent.defense_1_broken) {
             defense1Display.getBlock().setType(Material.YELLOW_CONCRETE);
         }
-        if(BlockBreakEvent.defense_2_broken) {
+        if (BlockBreakEvent.defense_2_broken) {
             defense2Display.getBlock().setType(Material.YELLOW_CONCRETE);
         }
-        if(BlockBreakEvent.defense_3_broken) {
+        if (BlockBreakEvent.defense_3_broken) {
             defense3Display.getBlock().setType(Material.YELLOW_CONCRETE);
         }
 
-        if(BlockBreakEvent.strength_1_broken) {
+        if (BlockBreakEvent.strength_1_broken) {
             strength1Display.getBlock().setType(Material.RED_CONCRETE);
         }
-        if(BlockBreakEvent.strength_2_broken) {
+        if (BlockBreakEvent.strength_2_broken) {
             strength2Display.getBlock().setType(Material.RED_CONCRETE);
         }
-        if(BlockBreakEvent.strength_3_broken) {
+        if (BlockBreakEvent.strength_3_broken) {
             strength3Display.getBlock().setType(Material.RED_CONCRETE);
         }
     }

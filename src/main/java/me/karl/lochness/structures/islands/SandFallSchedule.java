@@ -8,33 +8,29 @@ import org.bukkit.entity.FallingBlock;
 import org.bukkit.entity.Player;
 import org.bukkit.util.Vector;
 
-import java.util.ArrayList;
 import java.util.List;
 
 public class SandFallSchedule {
 
     public static Runnable sandFallScedule() {
-        return new Runnable() {
-            @Override
-            public void run() {
+        return () -> {
 
-                Location fallTubeLoc = Lochness.getIslandLoc().add(new Vector(0, 50, 7));
-                List<Entity> entityArrayList = Bukkit.getWorlds().get(0).getEntities();
-                for(Entity entity: entityArrayList) {
+            Location fallTubeLoc = Lochness.getIslandLoc().add(new Vector(0, 50, 7));
+            List<Entity> entityArrayList = Bukkit.getWorlds().get(0).getEntities();
+            for(Entity entity: entityArrayList) {
 
-                    if(entity.getLocation().distance(fallTubeLoc) > 6)
-                        continue;
-                    if(!(entity instanceof FallingBlock)) {
-                        if(!(entity instanceof Player))
-                            entity.teleport(entity.getLocation().add(new Vector(17, -5, 3)));
-                        continue;
-                    }
-
-                    entity.remove();
-
+                if(entity.getLocation().distance(fallTubeLoc) > 6)
+                    continue;
+                if(!(entity instanceof FallingBlock)) {
+                    if(!(entity instanceof Player))
+                        entity.teleport(entity.getLocation().add(new Vector(17, -5, 3)));
+                    continue;
                 }
 
+                entity.remove();
+
             }
+
         };
     }
 
