@@ -34,7 +34,7 @@ public class MessageHandler {
             ChatColor.DARK_RED + "[Karl]" + ChatColor.WHITE +  " Ich hoffe, das Plugin und der Endkampf haben euch gefallen",
             ChatColor.BLUE + "[Faincraft]" + ChatColor.WHITE +  " Wir würden uns auf jeden Fall über Feedback freuen",
             ChatColor.DARK_RED + "[Karl]" + ChatColor.WHITE +  " wenn ihr uns Feedback geben wollt, oder Ideen für einen dritten Endboss habt, könnt ihr sie gerne unter unserem Vorstellungsvideo in die Kommentare schreiben",
-            ChatColor.BLUE + "[Faincraft]" + ChatColor.WHITE +  " Vielen Dank fürs Durchspielen, auf wiedersehen"
+            ChatColor.BLUE + "[Faincraft]" + ChatColor.WHITE +  " Vielen Dank fürs Durchspielen, auf Wiedersehen"
     };
 
     public static void startEndcredits() {
